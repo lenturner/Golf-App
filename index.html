@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Golf Stats">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#0f172a">
-  <title>Golf Stats & Putt Calculator</title>
+  <title>Standalone Golf Stats App</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -18,40 +18,43 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen pb-24 select-none">
 
-  <!-- Top Bar -->
-  <header class="bg-slate-800 border-b border-slate-700 p-4 sticky top-0 z-20 flex justify-between items-center">
+  <!-- Top Header -->
+  <header class="bg-slate-800 border-b border-slate-700 px-4 py-3 sticky top-0 z-20 flex justify-between items-center">
     <div>
-      <h1 class="text-lg font-bold text-emerald-400">Golf Stats Automator</h1>
+      <h1 class="text-base font-bold text-emerald-400">Golf Stats Pro</h1>
       <div class="flex gap-2 mt-1">
-        <input id="courseName" type="text" onchange="persistState()" placeholder="Course" value="GGC" class="bg-slate-700 text-xs px-2 py-1 rounded border border-slate-600 w-28 text-white">
-        <input id="roundDate" type="date" onchange="persistState()" class="bg-slate-700 text-xs px-2 py-1 rounded border border-slate-600 text-white">
+        <input id="courseName" type="text" onchange="persistActiveRound()" placeholder="Course" value="GGC" class="bg-slate-700 text-xs px-2 py-1 rounded border border-slate-600 w-28 text-white">
+        <input id="roundDate" type="date" onchange="persistActiveRound()" class="bg-slate-700 text-xs px-2 py-1 rounded border border-slate-600 text-white">
       </div>
     </div>
     <div class="text-right">
-      <div class="text-xs text-slate-400">Score vs Par</div>
+      <div class="text-[11px] text-slate-400">Active Round</div>
       <div id="liveScore" class="text-2xl font-extrabold text-white">E</div>
     </div>
   </header>
 
-  <!-- Navigation Tabs -->
-  <div class="flex border-b border-slate-700 bg-slate-800 text-xs sm:text-sm font-medium sticky top-[73px] z-10">
-    <button onclick="switchTab('play')" id="tab-play" class="flex-1 py-3 text-center border-b-2 border-emerald-500 text-emerald-400">Play Hole</button>
-    <button onclick="switchTab('putt')" id="tab-putt" class="flex-1 py-3 text-center text-slate-400">Putt Break</button>
-    <button onclick="switchTab('summary')" id="tab-summary" class="flex-1 py-3 text-center text-slate-400">Round Stats</button>
-    <button onclick="switchTab('yardage')" id="tab-yardage" class="flex-1 py-3 text-center text-slate-400">Wedges/Clubs</button>
-  </div>
+  <!-- 6-Tab Navigation Bar -->
+  <nav class="flex border-b border-slate-700 bg-slate-800 text-[11px] sm:text-xs font-semibold sticky top-[69px] z-20">
+    <button onclick="switchTab('play')" id="tab-play" class="flex-1 py-3 text-center border-b-2 border-emerald-500 text-emerald-400">Play</button>
+    <button onclick="switchTab('putt')" id="tab-putt" class="flex-1 py-3 text-center text-slate-400">Putt</button>
+    <button onclick="switchTab('round')" id="tab-round" class="flex-1 py-3 text-center text-slate-400">Round</button>
+    <button onclick="switchTab('career')" id="tab-career" class="flex-1 py-3 text-center text-slate-400">Career</button>
+    <button onclick="switchTab('history')" id="tab-history" class="flex-1 py-3 text-center text-slate-400">History</button>
+    <button onclick="switchTab('yardage')" id="tab-yardage" class="flex-1 py-3 text-center text-slate-400">Clubs</button>
+  </nav>
 
   <!-- TAB 1: PLAY HOLE -->
   <main id="view-play" class="p-4 max-w-lg mx-auto space-y-4">
     <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl border border-slate-700">
       <button onclick="changeHole(-1)" class="px-5 py-2.5 bg-slate-700 rounded-lg font-bold active:bg-slate-600">&larr;</button>
       <div class="text-center">
-        <span class="text-xs uppercase tracking-wider text-slate-400">Current Hole</span>
+        <span class="text-[11px] uppercase tracking-wider text-slate-400">Hole Tracker</span>
         <div class="text-2xl font-bold" id="holeTitle">Hole 1</div>
       </div>
       <button onclick="changeHole(1)" class="px-5 py-2.5 bg-emerald-600 rounded-lg font-bold active:bg-emerald-500">&rarr;</button>
     </div>
 
+    <!-- Hole Par & Score -->
     <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-4">
       <div class="flex justify-between items-center">
         <span class="text-sm font-semibold text-slate-300">Hole Par</span>
@@ -75,6 +78,7 @@
       </div>
     </div>
 
+    <!-- Fairway & Approach -->
     <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-4">
       <div id="fairwaySection">
         <span class="text-sm font-semibold text-slate-300 block mb-2">Fairway Hit (Par 4/5)</span>
@@ -101,6 +105,7 @@
       </div>
     </div>
 
+    <!-- Short Game & Penalties -->
     <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 grid grid-cols-3 gap-3">
       <div>
         <label class="text-xs font-semibold text-slate-400 block mb-1">Chips</label>
@@ -116,6 +121,7 @@
       </div>
     </div>
 
+    <!-- Putting -->
     <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
       <div class="flex justify-between items-center">
         <span class="text-sm font-semibold text-slate-300">Putt Distances (m)</span>
@@ -130,518 +136,8 @@
     </div>
   </main>
 
-  <!-- TAB 2: PUTT BREAK CALCULATOR -->
+  <!-- TAB 2: PUTT BREAK CALCULATOR (FROM PUTTING MATRIX) -->
   <section id="view-putt" class="hidden p-4 max-w-lg mx-auto space-y-4">
-    
     <!-- Result Banner -->
     <div class="bg-gradient-to-br from-emerald-900/80 to-slate-800 p-5 rounded-2xl border border-emerald-500/40 text-center shadow-lg">
-      <div class="text-xs uppercase tracking-widest text-emerald-300 font-semibold">Calculated Aim / Break</div>
-      <div class="flex items-baseline justify-center gap-3 my-1">
-        <span id="breakCmOutput" class="text-5xl font-black text-white">16 cm</span>
-        <span id="breakCupsOutput" class="text-lg font-bold text-emerald-400">(~1.5 cups)</span>
-      </div>
-      <div id="breakDirectionHint" class="text-xs text-slate-300 mt-1 font-medium">3:00 • Full Break (1.00x) • Left-to-Right</div>
-    </div>
-
-    <!-- Step 1: Distance Input (1m - 10m) -->
-    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
-      <div class="flex justify-between items-center">
-        <label class="text-sm font-semibold text-slate-300">1. Putt Distance (m)</label>
-        <input id="puttCalcDistInput" type="number" inputmode="decimal" step="0.5" min="0.5" max="20" value="2" oninput="setPuttDist(this.value, true)" class="bg-slate-700 text-emerald-400 font-bold text-sm px-2.5 py-1 rounded-lg border border-slate-600 w-20 text-center">
-      </div>
-      <div class="grid grid-cols-5 gap-1.5" id="puttDistButtons">
-        <button onclick="setPuttDist(1)" data-val="1" class="btn-toggle py-2 rounded-lg border border-slate-600 bg-slate-700 text-xs">1m</button>
-        <button onclick="setPuttDist(2)" data-val="2" class="btn-toggle active py-2 rounded-lg border border-slate-600 bg-slate-700 text-xs">2m</button>
-        <button onclick="setPuttDist(3)" data-val="3" class="btn-toggle py-2 rounded-lg border border-slate-600 bg-slate-700 text-xs">3m</button>
-        <button onclick="setPuttDist(4)" data-val="4" class="btn-toggle py-2 rounded-lg border border-slate-600 bg-slate-700 text-xs">4m</button>
-        <button onclick="setPuttDist(5)" data-val="5" class="btn-toggle py-2 rounded-lg border border-slate-600 bg-slate-700 text-xs">5m</button>
-        <button onclick="setPuttDist(6)" data-val="6" class="btn-toggle py-2 rounded-lg border border-slate-600 bg-slate-700 text-xs">6m</button>
-        <button onclick="setPuttDist(7)" data-val="7" class="btn-toggle py-2 rounded-lg border border-slate-600 bg-slate-700 text-xs">7m</button>
-        <button onclick="setPuttDist(8)" data-val="8" class="btn-toggle py-2 rounded-lg border border-slate-600 bg-slate-700 text-xs">8m</button>
-        <button onclick="setPuttDist(9)" data-val="9" class="btn-toggle py-2 rounded-lg border border-slate-600 bg-slate-700 text-xs">9m</button>
-        <button onclick="setPuttDist(10)" data-val="10" class="btn-toggle py-2 rounded-lg border border-slate-600 bg-slate-700 text-xs">10m</button>
-      </div>
-    </div>
-
-    <!-- Step 2: Clock Direction -->
-    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
-      <div class="flex justify-between items-center">
-        <span class="text-sm font-semibold text-slate-300">2. Clock Direction</span>
-        <span class="text-[11px] text-slate-400">6:00 = Straight Uphill • 12:00 = Downhill</span>
-      </div>
-
-      <!-- Visual Clock Grid -->
-      <div class="relative w-56 h-56 mx-auto my-2 rounded-full border-2 border-slate-700 bg-slate-900/70 flex items-center justify-center">
-        <div class="text-center pointer-events-none">
-          <div class="text-[10px] text-slate-500 uppercase">Low Side</div>
-          <div class="text-xs font-bold text-slate-400">&uarr; 12:00 &uarr;</div>
-          <div class="w-2 h-2 bg-emerald-500 rounded-full mx-auto my-1"></div>
-          <div class="text-[10px] text-slate-500">Cup</div>
-        </div>
-
-        <!-- 12 Clock Positions positioned circularly -->
-        <button onclick="setClockHour('12:00')" data-hour="12:00" style="top: 6px; left: 50%; transform: translateX(-50%);" class="clock-btn absolute w-11 h-8 rounded-lg text-xs border border-slate-600 bg-slate-700">12</button>
-        <button onclick="setClockHour('1:00')"  data-hour="1:00"  style="top: 18px; right: 38px;" class="clock-btn absolute w-10 h-8 rounded-lg text-xs border border-slate-600 bg-slate-700">1</button>
-        <button onclick="setClockHour('2:00')"  data-hour="2:00"  style="top: 52px; right: 10px;" class="clock-btn absolute w-10 h-8 rounded-lg text-xs border border-slate-600 bg-slate-700">2</button>
-        <button onclick="setClockHour('3:00')"  data-hour="3:00"  style="top: 50%; right: 6px; transform: translateY(-50%);" class="clock-btn active absolute w-10 h-8 rounded-lg text-xs border border-slate-600 bg-slate-700">3</button>
-        <button onclick="setClockHour('4:00')"  data-hour="4:00"  style="bottom: 52px; right: 10px;" class="clock-btn absolute w-10 h-8 rounded-lg text-xs border border-slate-600 bg-slate-700">4</button>
-        <button onclick="setClockHour('5:00')"  data-hour="5:00"  style="bottom: 18px; right: 38px;" class="clock-btn absolute w-10 h-8 rounded-lg text-xs border border-slate-600 bg-slate-700">5</button>
-        <button onclick="setClockHour('6:00')"  data-hour="6:00"  style="bottom: 6px; left: 50%; transform: translateX(-50%);" class="clock-btn absolute w-11 h-8 rounded-lg text-xs border border-slate-600 bg-slate-700">6</button>
-        <button onclick="setClockHour('7:00')"  data-hour="7:00"  style="bottom: 18px; left: 38px;" class="clock-btn absolute w-10 h-8 rounded-lg text-xs border border-slate-600 bg-slate-700">7</button>
-        <button onclick="setClockHour('8:00')"  data-hour="8:00"  style="bottom: 52px; left: 10px;" class="clock-btn absolute w-10 h-8 rounded-lg text-xs border border-slate-600 bg-slate-700">8</button>
-        <button onclick="setClockHour('9:00')"  data-hour="9:00"  style="top: 50%; left: 6px; transform: translateY(-50%);" class="clock-btn absolute w-10 h-8 rounded-lg text-xs border border-slate-600 bg-slate-700">9</button>
-        <button onclick="setClockHour('10:00')" data-hour="10:00" style="top: 52px; left: 10px;" class="clock-btn absolute w-10 h-8 rounded-lg text-xs border border-slate-600 bg-slate-700">10</button>
-        <button onclick="setClockHour('11:00')" data-hour="11:00" style="top: 18px; left: 38px;" class="clock-btn absolute w-10 h-8 rounded-lg text-xs border border-slate-600 bg-slate-700">11</button>
-      </div>
-
-      <!-- Quick Multiplier Group Selector -->
-      <div class="grid grid-cols-2 gap-1.5 text-xs pt-1" id="clockGroupButtons">
-        <button onclick="setClockHour('12:00')" data-mult="0" class="btn-toggle py-2 px-2 rounded-lg border border-slate-600 bg-slate-700">12 / 6 (0.00x Straight)</button>
-        <button onclick="setClockHour('1:00')" data-mult="0.5" class="btn-toggle py-2 px-2 rounded-lg border border-slate-600 bg-slate-700">1 / 5 / 7 / 11 (0.50x)</button>
-        <button onclick="setClockHour('2:00')" data-mult="0.85" class="btn-toggle py-2 px-2 rounded-lg border border-slate-600 bg-slate-700">2 / 4 / 8 / 10 (0.85x)</button>
-        <button onclick="setClockHour('3:00')" data-mult="1" class="btn-toggle active py-2 px-2 rounded-lg border border-slate-600 bg-slate-700">3 / 9 (1.00x Full)</button>
-      </div>
-    </div>
-
-    <!-- Step 3: Slope % -->
-    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
-      <div class="flex justify-between items-center">
-        <label class="text-sm font-semibold text-slate-300">3. Green Slope (%)</label>
-        <input id="puttCalcSlopeInput" type="number" inputmode="decimal" step="0.5" min="0" max="10" value="2" oninput="setPuttSlope(this.value, true)" class="bg-slate-700 text-emerald-400 font-bold text-sm px-2.5 py-1 rounded-lg border border-slate-600 w-20 text-center">
-      </div>
-      <div class="grid grid-cols-4 gap-2" id="puttSlopeButtons">
-        <button onclick="setPuttSlope(1)" data-val="1" class="btn-toggle py-2.5 rounded-lg border border-slate-600 bg-slate-700 text-sm">1% Slope</button>
-        <button onclick="setPuttSlope(2)" data-val="2" class="btn-toggle active py-2.5 rounded-lg border border-slate-600 bg-slate-700 text-sm">2% Slope</button>
-        <button onclick="setPuttSlope(3)" data-val="3" class="btn-toggle py-2.5 rounded-lg border border-slate-600 bg-slate-700 text-sm">3% Slope</button>
-        <button onclick="setPuttSlope(4)" data-val="4" class="btn-toggle py-2.5 rounded-lg border border-slate-600 bg-slate-700 text-sm">4% Slope</button>
-      </div>
-    </div>
-
-    <!-- Matrix Table Slice for Selected Distance -->
-    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-2">
-      <div class="flex justify-between items-center">
-        <h3 class="font-bold text-emerald-400 text-sm" id="matrixSliceTitle">Putting Matrix @ 2m (Break in cm)</h3>
-        <span class="text-[11px] text-slate-400">1 Hole Cup = 10.8cm</span>
-      </div>
-      <table class="w-full text-xs text-left border-collapse">
-        <thead>
-          <tr class="border-b border-slate-700 text-slate-400">
-            <th class="py-1.5">Clock Position</th>
-            <th class="text-center">1%</th>
-            <th class="text-center">2%</th>
-            <th class="text-center">3%</th>
-            <th class="text-center">4%</th>
-          </tr>
-        </thead>
-        <tbody id="matrixSliceBody" class="divide-y divide-slate-700"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- TAB 3: ROUND SUMMARY & 1-TAP COPY FOR SHEETS -->
-  <section id="view-summary" class="hidden p-4 max-w-lg mx-auto space-y-4">
-    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
-      <div class="flex justify-between items-center">
-        <h2 class="font-bold text-emerald-400">Round Summary</h2>
-        <div class="flex gap-2">
-          <button onclick="resetRound()" class="bg-rose-700 text-xs font-bold px-3 py-2 rounded-lg">Reset</button>
-          <button onclick="copyColumnForSheets()" id="copyBtn" class="bg-emerald-600 text-xs font-bold px-3 py-2 rounded-lg">Copy for Sheets</button>
-        </div>
-      </div>
-      <p class="text-xs text-slate-400">Tap <b>Copy for Sheets</b>, open Google Sheets app &rarr; <b>Summary</b> tab, tap the next empty Date cell in Row 1, and tap <b>Paste</b>.</p>
-      <div id="summaryMetrics" class="grid grid-cols-2 gap-2 text-sm"></div>
-    </div>
-
-    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-2">
-      <h3 class="font-bold text-slate-300 text-sm">Approach Buckets (Att / GIR / Prox)</h3>
-      <div id="approachTable" class="text-xs space-y-1"></div>
-    </div>
-  </section>
-
-  <!-- TAB 4: WEDGE CHART & CLUB DISTANCES -->
-  <section id="view-yardage" class="hidden p-4 max-w-lg mx-auto space-y-4">
-    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-      <h2 class="font-bold text-emerald-400 mb-3">Wedge Matrix (Carry / Total m)</h2>
-      <table class="w-full text-xs text-left border-collapse">
-        <thead><tr class="border-b border-slate-700 text-slate-400"><th class="py-2">Club</th><th>Hip</th><th>Sh'ld</th><th>Full</th></tr></thead>
-        <tbody class="divide-y divide-slate-700">
-          <tr><td class="py-2 font-bold">60°</td><td>30 / 35m</td><td>50 / 55m</td><td>70 / 73m</td></tr>
-          <tr><td class="py-2 font-bold">56°</td><td>40 / 45m</td><td>60 / 65m</td><td>80 / 86m</td></tr>
-          <tr><td class="py-2 font-bold">52°</td><td>45 / 50m</td><td>70 / 75m</td><td>93 / 100m</td></tr>
-          <tr><td class="py-2 font-bold">48°</td><td>60 / 65m</td><td>75 / 85m</td><td>100 / 105m</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-      <h2 class="font-bold text-emerald-400 mb-3">Club Stock Distances (m)</h2>
-      <div class="grid grid-cols-3 gap-2 text-xs">
-        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>Driver:</span><b>230m</b></div>
-        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>3W:</span><b>200m</b></div>
-        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>4i:</span><b>190m</b></div>
-        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>5i:</span><b>175m</b></div>
-        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>6i:</span><b>160m</b></div>
-        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>7i:</span><b>150m</b></div>
-        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>8i:</span><b>140m</b></div>
-        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>9i:</span><b>125m</b></div>
-        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>PW:</span><b>110m</b></div>
-        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>48°:</span><b>100m</b></div>
-        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>52°:</span><b>93m</b></div>
-        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>56°:</span><b>80m</b></div>
-        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>60°:</span><b>70m</b></div>
-      </div>
-    </div>
-  </section>
-
-  <script>
-    const defaultPars = [4,3,4,5,3,3,4,3,4,4,3,4,5,3,3,4,3,4];
-    let currentHole = 0;
-    let holes = [];
-
-    // Putting Matrix State & Configuration
-    let puttState = {
-      dist: 2,
-      hour: '3:00',
-      mult: 1.0,
-      slope: 2
-    };
-
-    const clockConfig = {
-      '12:00': { mult: 0.00, groupLabel: '12:00 / 6:00 (Straight)', desc: 'Straight Downhill (No Break)' },
-      '1:00':  { mult: 0.50, groupLabel: '1:00 / 5:00 / 7:00 / 11:00 (0.50x)', desc: 'Downhill • Breaks Left-to-Right (0.50x)' },
-      '2:00':  { mult: 0.85, groupLabel: '2:00 / 4:00 / 8:00 / 10:00 (0.85x)', desc: 'Downhill • Breaks Left-to-Right (0.85x)' },
-      '3:00':  { mult: 1.00, groupLabel: '3:00 / 9:00 (Full Break, 1.00x)', desc: 'Sidehill • Breaks Left-to-Right (1.00x)' },
-      '4:00':  { mult: 0.85, groupLabel: '2:00 / 4:00 / 8:00 / 10:00 (0.85x)', desc: 'Uphill • Breaks Left-to-Right (0.85x)' },
-      '5:00':  { mult: 0.50, groupLabel: '1:00 / 5:00 / 7:00 / 11:00 (0.50x)', desc: 'Uphill • Breaks Left-to-Right (0.50x)' },
-      '6:00':  { mult: 0.00, groupLabel: '12:00 / 6:00 (Straight)', desc: 'Straight Uphill (No Break)' },
-      '7:00':  { mult: 0.50, groupLabel: '1:00 / 5:00 / 7:00 / 11:00 (0.50x)', desc: 'Uphill • Breaks Right-to-Left (0.50x)' },
-      '8:00':  { mult: 0.85, groupLabel: '2:00 / 4:00 / 8:00 / 10:00 (0.85x)', desc: 'Uphill • Breaks Right-to-Left (0.85x)' },
-      '9:00':  { mult: 1.00, groupLabel: '3:00 / 9:00 (Full Break, 1.00x)', desc: 'Sidehill • Breaks Right-to-Left (1.00x)' },
-      '10:00': { mult: 0.85, groupLabel: '2:00 / 4:00 / 8:00 / 10:00 (0.85x)', desc: 'Downhill • Breaks Right-to-Left (0.85x)' },
-      '11:00': { mult: 0.50, groupLabel: '1:00 / 5:00 / 7:00 / 11:00 (0.50x)', desc: 'Downhill • Breaks Right-to-Left (0.50x)' }
-    };
-
-    // Exact formula matching Putting_Matrix_1m_10m.xlsx: round(2 * d^2 * slope * mult)
-    function calcBreakCm(dist, slope, mult) {
-      return Math.round(2 * Math.pow(dist, 2) * slope * mult);
-    }
-
-    function setPuttDist(val, fromInput = false) {
-      const num = parseFloat(val);
-      if (!isNaN(num) && num >= 0) {
-        puttState.dist = num;
-        if (!fromInput) document.getElementById('puttCalcDistInput').value = num;
-        updatePuttCalculatorUI();
-      }
-    }
-
-    function setClockHour(hour) {
-      puttState.hour = hour;
-      puttState.mult = clockConfig[hour].mult;
-      updatePuttCalculatorUI();
-    }
-
-    function setPuttSlope(val, fromInput = false) {
-      const num = parseFloat(val);
-      if (!isNaN(num) && num >= 0) {
-        puttState.slope = num;
-        if (!fromInput) document.getElementById('puttCalcSlopeInput').value = num;
-        updatePuttCalculatorUI();
-      }
-    }
-
-    function updatePuttCalculatorUI() {
-      const { dist, hour, mult, slope } = puttState;
-      const breakCm = calcBreakCm(dist, slope, mult);
-      const cups = (breakCm / 10.8).toFixed(1);
-
-      document.getElementById('breakCmOutput').innerText = `${breakCm} cm`;
-      document.getElementById('breakCupsOutput').innerText = breakCm === 0 ? '(Straight)' : `(~${cups} cups)`;
-      document.getElementById('breakDirectionHint').innerText = `${hour} • ${clockConfig[hour].desc}`;
-
-      // Highlight active buttons
-      document.querySelectorAll('#puttDistButtons button').forEach(b => {
-        b.classList.toggle('active', Number(b.dataset.val) === dist);
-      });
-      document.querySelectorAll('.clock-btn').forEach(b => {
-        b.classList.toggle('active', b.dataset.hour === hour);
-      });
-      document.querySelectorAll('#clockGroupButtons button').forEach(b => {
-        b.classList.toggle('active', Number(b.dataset.mult) === mult);
-      });
-      document.querySelectorAll('#puttSlopeButtons button').forEach(b => {
-        b.classList.toggle('active', Number(b.dataset.val) === slope);
-      });
-
-      // Render Matrix Slice for current distance
-      document.getElementById('matrixSliceTitle').innerText = `Putting Matrix @ ${dist}m (Break in cm)`;
-      const groups = [
-        { label: '12:00 / 6:00 (0.00x)', m: 0.00 },
-        { label: '1 / 5 / 7 / 11 (0.50x)', m: 0.50 },
-        { label: '2 / 4 / 8 / 10 (0.85x)', m: 0.85 },
-        { label: '3:00 / 9:00 (1.00x)', m: 1.00 }
-      ];
-
-      document.getElementById('matrixSliceBody').innerHTML = groups.map(g => {
-        const isRowActive = g.m === mult;
-        return `<tr class="${isRowActive ? 'bg-emerald-900/40 text-emerald-300 font-bold' : 'text-slate-300'}">
-          <td class="py-2 pr-2">${g.label}</td>
-          ${[1,2,3,4].map(s => {
-            const val = calcBreakCm(dist, s, g.m);
-            const isCellActive = isRowActive && s === slope;
-            return `<td class="text-center py-2 ${isCellActive ? 'bg-emerald-500 text-slate-950 rounded font-extrabold' : ''}">${val}</td>`;
-          }).join('')}
-        </tr>`;
-      }).join('');
-    }
-
-    function initApp() {
-      const saved = localStorage.getItem('golfRoundData_v1');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        holes = parsed.holes;
-        document.getElementById('courseName').value = parsed.course || 'GGC';
-        document.getElementById('roundDate').value = parsed.date || new Date().toISOString().split('T')[0];
-      } else {
-        initFreshHoles();
-      }
-      renderHole();
-      updatePuttCalculatorUI();
-    }
-
-    function initFreshHoles() {
-      holes = Array.from({length: 18}, (_, i) => ({
-        hole: i + 1, par: defaultPars[i], relScore: 0, fwy: 'Yes', gir: 'No',
-        appDist: '', penShots: 0, chips: 0, sandShots: 0, putts: ['', '', '', '']
-      }));
-      document.getElementById('roundDate').valueAsDate = new Date();
-    }
-
-    function persistState() {
-      localStorage.setItem('golfRoundData_v1', JSON.stringify({
-        course: document.getElementById('courseName').value,
-        date: document.getElementById('roundDate').value,
-        holes: holes
-      }));
-    }
-
-    function resetRound() {
-      if (confirm('Clear all holes and start a new round?')) {
-        localStorage.removeItem('golfRoundData_v1');
-        currentHole = 0;
-        initFreshHoles();
-        renderHole();
-        renderSummary();
-      }
-    }
-
-    function renderHole() {
-      const h = holes[currentHole];
-      document.getElementById('holeTitle').innerText = `Hole ${h.hole}`;
-      document.querySelectorAll('#parButtons button').forEach(b => b.classList.toggle('active', Number(b.dataset.val) === h.par));
-      document.getElementById('fairwaySection').style.display = h.par === 3 ? 'none' : 'block';
-      document.querySelectorAll('#scoreButtons button').forEach(b => b.classList.toggle('active', Number(b.dataset.val) === h.relScore));
-      document.querySelectorAll('#fwyButtons button').forEach(b => b.classList.toggle('active', b.dataset.val === h.fwy));
-      document.querySelectorAll('#girButtons button').forEach(b => b.classList.toggle('active', b.dataset.val === h.gir));
-
-      document.getElementById('appDist').value = h.appDist;
-      document.getElementById('chips').value = h.chips;
-      document.getElementById('sandShots').value = h.sandShots;
-      document.getElementById('penShots').value = h.penShots;
-      ['putt1','putt2','putt3','putt4'].forEach((id, idx) => document.getElementById(id).value = h.putts[idx]);
-      updateLiveHeader();
-    }
-
-    function saveCurrentHole() {
-      const h = holes[currentHole];
-      h.appDist = document.getElementById('appDist').value;
-      h.chips = Number(document.getElementById('chips').value) || 0;
-      h.sandShots = Number(document.getElementById('sandShots').value) || 0;
-      h.penShots = Number(document.getElementById('penShots').value) || 0;
-      h.putts = [
-        document.getElementById('putt1').value,
-        document.getElementById('putt2').value,
-        document.getElementById('putt3').value,
-        document.getElementById('putt4').value
-      ];
-      persistState();
-      updateLiveHeader();
-    }
-
-    function updateLiveHeader() {
-      const h = holes[currentHole];
-      const activePutts = h.putts.filter(p => p !== '' && !isNaN(p)).map(Number);
-      const puttCount = activePutts.length;
-      const upDown = (h.chips > 0 && puttCount === 1 && h.relScore <= 0) ? ' • Up & Down!' : '';
-      const sandSave = (h.sandShots > 0 && puttCount === 1 && h.relScore <= 0) ? ' • Sand Save!' : '';
-      document.getElementById('autoPuttSummary').innerText = `${puttCount} Putts${upDown}${sandSave}`;
-
-      const totalRel = holes.reduce((acc, el) => acc + el.relScore, 0);
-      document.getElementById('liveScore').innerText = totalRel === 0 ? 'E' : (totalRel > 0 ? `+${totalRel}` : totalRel);
-    }
-
-    function setPar(p) { holes[currentHole].par = p; persistState(); renderHole(); }
-    function setRelScore(s) { holes[currentHole].relScore = s; persistState(); renderHole(); }
-    function setFwy(f) { holes[currentHole].fwy = f; persistState(); renderHole(); }
-    function setGir(g) { holes[currentHole].gir = g; persistState(); renderHole(); }
-    function changeHole(delta) { saveCurrentHole(); currentHole = (currentHole + delta + 18) % 18; renderHole(); }
-
-    function switchTab(tab) {
-      ['play','putt','summary','yardage'].forEach(t => {
-        document.getElementById(`view-${t}`).classList.toggle('hidden', t !== tab);
-        const btn = document.getElementById(`tab-${t}`);
-        btn.classList.toggle('border-b-2', t === tab);
-        btn.classList.toggle('border-emerald-500', t === tab);
-        btn.classList.toggle('text-emerald-400', t === tab);
-        btn.classList.toggle('text-slate-400', t !== tab);
-      });
-      if (tab === 'summary') renderSummary();
-      if (tab === 'putt') {
-        // Auto-pull 1st putt distance from current hole if entered
-        const p1 = parseFloat(holes[currentHole].putts[0]);
-        if (!isNaN(p1) && p1 > 0) setPuttDist(p1);
-      }
-    }
-
-    function calculateRoundStats() {
-      let stats = {
-        score: 0, totalPutts: 0,
-        puttBuckets: [
-          {label: '=<1m', min: 0, max: 1.0, att: 0, made: 0},
-          {label: '1-1.9m', min: 1.0001, max: 1.999, att: 0, made: 0},
-          {label: '2-2.9m', min: 2.0, max: 2.999, att: 0, made: 0},
-          {label: '3-3.9m', min: 3.0, max: 3.999, att: 0, made: 0},
-          {label: '4-4.9m', min: 4.0, max: 4.999, att: 0, made: 0},
-          {label: '>5m', min: 5.0, max: 999, att: 0, made: 0}
-        ],
-        eagles: 0, birdies: 0, pars: 0, bogeys: 0, dblPlus: 0,
-        fwyHit: 0, fwyAtt: 0, fwyRight: 0, fwyLeft: 0, fwyShort: 0,
-        gir: 0, penalty: 0, chips: 0, upDown: 0, chipPuttDist: [],
-        sandShots: 0, sandSave: 0, sandPuttDist: [],
-        scrambleAtt: 0, scrambleMade: 0, parScores: {3: [], 4: [], 5: []},
-        appBuckets: [
-          {label: '<49', min: 0, max: 49, att: 0, gir: 0, dists: []},
-          {label: '50-104', min: 50, max: 104, att: 0, gir: 0, dists: []},
-          {label: '105-119', min: 105, max: 119, att: 0, gir: 0, dists: []},
-          {label: '120-129', min: 120, max: 129, att: 0, gir: 0, dists: []},
-          {label: '130-139', min: 130, max: 139, att: 0, gir: 0, dists: []},
-          {label: '140-149', min: 140, max: 149, att: 0, gir: 0, dists: []},
-          {label: '150-159', min: 150, max: 159, att: 0, gir: 0, dists: []},
-          {label: '160-169', min: 160, max: 169, att: 0, gir: 0, dists: []},
-          {label: '170-179', min: 170, max: 179, att: 0, gir: 0, dists: []},
-          {label: '180-189', min: 180, max: 189, att: 0, gir: 0, dists: []},
-          {label: '190-199', min: 190, max: 199, att: 0, gir: 0, dists: []},
-          {label: '200-219', min: 200, max: 219, att: 0, gir: 0, dists: []},
-          {label: '220+', min: 220, max: 999, att: 0, gir: 0, dists: []}
-        ]
-      };
-
-      holes.forEach(h => {
-        stats.score += h.relScore;
-        stats.parScores[h.par].push(h.par + h.relScore);
-        if (h.relScore <= -2) stats.eagles++;
-        else if (h.relScore === -1) stats.birdies++;
-        else if (h.relScore === 0) stats.pars++;
-        else if (h.relScore === 1) stats.bogeys++;
-        else stats.dblPlus++;
-
-        if (h.par > 3) {
-          stats.fwyAtt++;
-          if (h.fwy === 'Yes') stats.fwyHit++;
-          if (h.fwy === 'Right') stats.fwyRight++;
-          if (h.fwy === 'Left') stats.fwyLeft++;
-          if (h.fwy === 'Short') stats.fwyShort++;
-        }
-
-        const activePutts = h.putts.filter(p => p !== '' && !isNaN(p)).map(Number);
-        const puttCount = activePutts.length;
-        stats.totalPutts += puttCount;
-        const firstPutt = puttCount > 0 ? activePutts[0] : 0;
-
-        activePutts.forEach((dist, idx) => {
-          const isMade = (idx === puttCount - 1);
-          const b = stats.puttBuckets.find(b => dist >= b.min && dist <= b.max);
-          if (b) { b.att++; if (isMade) b.made++; }
-        });
-
-        if (h.gir === 'Yes') stats.gir++;
-        else { stats.scrambleAtt++; if (h.relScore <= 0) stats.scrambleMade++; }
-
-        stats.penalty += h.penShots;
-        stats.chips += h.chips;
-        if (h.chips > 0) {
-          stats.chipPuttDist.push(firstPutt);
-          if (puttCount === 1 && h.relScore <= 0) stats.upDown++;
-        }
-
-        stats.sandShots += h.sandShots;
-        if (h.sandShots > 0) {
-          stats.sandPuttDist.push(firstPutt);
-          if (puttCount === 1 && h.relScore <= 0) stats.sandSave++;
-        }
-
-        if (h.appDist !== '' && !isNaN(h.appDist)) {
-          const d = Number(h.appDist);
-          const ab = stats.appBuckets.find(b => d >= b.min && d <= b.max);
-          if (ab) {
-            ab.att++;
-            if (h.gir === 'Yes') { ab.gir++; if (firstPutt > 0) ab.dists.push(firstPutt); }
-          }
-        }
-      });
-      return stats;
-    }
-
-    function avg(arr) { return arr.length ? (arr.reduce((a,b)=>a+b, 0) / arr.length).toFixed(2) : 0; }
-
-    function renderSummary() {
-      const s = calculateRoundStats();
-      const fwyPct = s.fwyAtt ? Math.round((s.fwyHit / s.fwyAtt)*100) + '%' : '0%';
-      const items = [
-        ['Score (vs Par)', s.score], ['Total Putts', s.totalPutts],
-        ['Avg Putts / Hole', (s.totalPutts / 18).toFixed(2)], ['Fairways Hit %', fwyPct],
-        ['GIR', `${s.gir} / 18`], ['Up & Downs', `${s.upDown} / ${s.chips}`],
-        ['Sand Saves', `${s.sandSave} / ${s.sandShots}`], ['Scramble', `${s.scrambleMade} / ${s.scrambleAtt}`],
-        ['Penalties', s.penalty], ['Avg Chip Prox', `${avg(s.chipPuttDist)}m`],
-        ['Avg Sand Prox', `${avg(s.sandPuttDist)}m`], ['Birdies / Pars', `${s.birdies} / ${s.pars}`]
-      ];
-      document.getElementById('summaryMetrics').innerHTML = items.map(([k,v]) =>
-        `<div class="bg-slate-700/60 p-2.5 rounded-lg flex justify-between"><span>${k}</span><b class="text-emerald-300">${v}</b></div>`
-      ).join('');
-
-      document.getElementById('approachTable').innerHTML = s.appBuckets.map(b =>
-        `<div class="flex justify-between border-b border-slate-700 py-1">
-          <span class="font-semibold w-20">${b.label}m</span><span>Att: ${b.att}</span><span>GIR: ${b.gir}</span><span>Prox: ${avg(b.dists)}m</span>
-        </div>`
-      ).join('');
-    }
-
-    function copyColumnForSheets() {
-      const s = calculateRoundStats();
-      const course = document.getElementById('courseName').value || 'Course';
-      const date = document.getElementById('roundDate').value;
-      const fwyPct = s.fwyAtt ? Math.round((s.fwyHit / s.fwyAtt)*100) + '%' : '0%';
-
-      let col = [date, course, s.score, s.totalPutts, (s.totalPutts / 18).toFixed(4)];
-      s.puttBuckets.forEach(b => { col.push(b.att, b.made); });
-      col.push(
-        s.eagles, s.birdies, s.pars, s.bogeys, s.dblPlus,
-        fwyPct, s.gir, s.penalty, s.chips, s.upDown, avg(s.chipPuttDist),
-        s.sandShots, avg(s.sandPuttDist), s.sandSave
-      );
-      s.appBuckets.forEach(b => { col.push(b.att, b.gir, avg(b.dists)); });
-      col.push(
-        s.scrambleAtt, s.scrambleMade, s.fwyRight, s.fwyLeft, s.fwyShort,
-        avg(s.parScores[3]), avg(s.parScores[4]), avg(s.parScores[5])
-      );
-
-      navigator.clipboard.writeText(col.join("\n")).then(() => {
-        const btn = document.getElementById('copyBtn');
-        btn.innerText = "Copied! Paste in Sheet";
-        setTimeout(() => btn.innerText = "Copy for Sheets", 3000);
-      });
-    }
-
-    initApp();
-  </script>
-</body>
-</html>
+      <div class="text-xs uppercase tracking-widest text
