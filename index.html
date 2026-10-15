@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Golf Stats">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0f172a">
+  <title>Standalone Golf Stats App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    .btn-toggle.active { background-color: #16a34a; color: white; border-color: #16a34a; font-weight: 600; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen pb-24 select-none">
+
+  <!-- Top Header -->
+  <header class="bg-slate-800 border-b border-slate-700 px-4 py-3 sticky top-0 z-20 flex justify-between items-center">
+    <div>
+      <h1 class="text-base font-bold text-emerald-400">Golf Stats Pro</h1>
+      <div class="flex gap-2 mt-1">
+        <input id="courseName" type="text" onchange="persistActiveRound()" placeholder="Course" value="GGC" class="bg-slate-700 text-xs px-2 py-1 rounded border border-slate-600 w-28 text-white">
+        <input id="roundDate" type="date" onchange="persistActiveRound()" class="bg-slate-700 text-xs px-2 py-1 rounded border border-slate-600 text-white">
+      </div>
+    </div>
+    <div class="text-right">
+      <div class="text-[11px] text-slate-400">Active Round</div>
+      <div id="liveScore" class="text-2xl font-extrabold text-white">E</div>
+    </div>
+  </header>
+
+  <!-- 5-Tab Navigation Bar -->
+  <nav class="flex border-b border-slate-700 bg-slate-800 text-xs font-semibold sticky top-[69px] z-20">
+    <button onclick="switchTab('play')" id="tab-play" class="flex-1 py-3 text-center border-b-2 border-emerald-500 text-emerald-400">Play</button>
+    <button onclick="switchTab('round')" id="tab-round" class="flex-1 py-3 text-center text-slate-400">Round</button>
+    <button onclick="switchTab('career')" id="tab-career" class="flex-1 py-3 text-center text-slate-400">Career</button>
+    <button onclick="switchTab('history')" id="tab-history" class="flex-1 py-3 text-center text-slate-400">History</button>
+    <button onclick="switchTab('yardage')" id="tab-yardage" class="flex-1 py-3 text-center text-slate-400">Clubs</button>
+  </nav>
+
+  <!-- TAB 1: PLAY HOLE -->
+  <main id="view-play" class="p-4 max-w-lg mx-auto space-y-4">
+    <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl border border-slate-700">
+      <button onclick="changeHole(-1)" class="px-5 py-2.5 bg-slate-700 rounded-lg font-bold active:bg-slate-600">&larr;</button>
+      <div class="text-center">
+        <span class="text-[11px] uppercase tracking-wider text-slate-400">Hole Tracker</span>
+        <div class="text-2xl font-bold" id="holeTitle">Hole 1</div>
+      </div>
+      <button onclick="changeHole(1)" class="px-5 py-2.5 bg-emerald-600 rounded-lg font-bold active:bg-emerald-500">&rarr;</button>
+    </div>
+
+    <!-- Hole Par & Score -->
+    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-4">
+      <div class="flex justify-between items-center">
+        <span class="text-sm font-semibold text-slate-300">Hole Par</span>
+        <div class="flex gap-2" id="parButtons">
+          <button onclick="setPar(3)" data-val="3" class="btn-toggle px-4 py-2 rounded-lg border border-slate-600 bg-slate-700 text-sm">Par 3</button>
+          <button onclick="setPar(4)" data-val="4" class="btn-toggle active px-4 py-2 rounded-lg border border-slate-600 bg-slate-700 text-sm">Par 4</button>
+          <button onclick="setPar(5)" data-val="5" class="btn-toggle px-4 py-2 rounded-lg border border-slate-600 bg-slate-700 text-sm">Par 5</button>
+        </div>
+      </div>
+
+      <div>
+        <span class="text-sm font-semibold text-slate-300 block mb-2">Score Relative to Par</span>
+        <div class="grid grid-cols-6 gap-1.5" id="scoreButtons">
+          <button onclick="setRelScore(-2)" data-val="-2" class="btn-toggle py-2.5 rounded-lg border border-slate-600 bg-slate-700 text-xs">Eagle<br>-2</button>
+          <button onclick="setRelScore(-1)" data-val="-1" class="btn-toggle py-2.5 rounded-lg border border-slate-600 bg-slate-700 text-xs">Birdie<br>-1</button>
+          <button onclick="setRelScore(0)" data-val="0" class="btn-toggle active py-2.5 rounded-lg border border-slate-600 bg-slate-700 text-xs">Par<br>0</button>
+          <button onclick="setRelScore(1)" data-val="1" class="btn-toggle py-2.5 rounded-lg border border-slate-600 bg-slate-700 text-xs">Bogey<br>+1</button>
+          <button onclick="setRelScore(2)" data-val="2" class="btn-toggle py-2.5 rounded-lg border border-slate-600 bg-slate-700 text-xs">Dbl<br>+2</button>
+          <button onclick="setRelScore(3)" data-val="3" class="btn-toggle py-2.5 rounded-lg border border-slate-600 bg-slate-700 text-xs">Trp+<br>+3</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fairway & Approach -->
+    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-4">
+      <div id="fairwaySection">
+        <span class="text-sm font-semibold text-slate-300 block mb-2">Fairway Hit (Par 4/5)</span>
+        <div class="grid grid-cols-4 gap-2" id="fwyButtons">
+          <button onclick="setFwy('Yes')" data-val="Yes" class="btn-toggle py-2 rounded-lg border border-slate-600 bg-slate-700 text-sm">Yes</button>
+          <button onclick="setFwy('Left')" data-val="Left" class="btn-toggle py-2 rounded-lg border border-slate-600 bg-slate-700 text-sm">Left</button>
+          <button onclick="setFwy('Right')" data-val="Right" class="btn-toggle py-2 rounded-lg border border-slate-600 bg-slate-700 text-sm">Right</button>
+          <button onclick="setFwy('Short')" data-val="Short" class="btn-toggle py-2 rounded-lg border border-slate-600 bg-slate-700 text-sm">Short</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 pt-1">
+        <div>
+          <label class="text-sm font-semibold text-slate-300 block mb-1">Approach Dist (m)</label>
+          <input id="appDist" type="number" inputmode="decimal" oninput="saveCurrentHole()" placeholder="e.g. 135" class="w-full bg-slate-700 p-2.5 rounded-lg border border-slate-600 text-white">
+        </div>
+        <div>
+          <span class="text-sm font-semibold text-slate-300 block mb-1">Green in Reg (GIR)</span>
+          <div class="grid grid-cols-2 gap-2" id="girButtons">
+            <button onclick="setGir('Yes')" data-val="Yes" class="btn-toggle py-2.5 rounded-lg border border-slate-600 bg-slate-700 text-sm">Yes</button>
+            <button onclick="setGir('No')" data-val="No" class="btn-toggle active py-2.5 rounded-lg border border-slate-600 bg-slate-700 text-sm">No</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Short Game & Penalties -->
+    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 grid grid-cols-3 gap-3">
+      <div>
+        <label class="text-xs font-semibold text-slate-400 block mb-1">Chips</label>
+        <input id="chips" type="number" inputmode="numeric" min="0" value="0" oninput="saveCurrentHole()" class="w-full bg-slate-700 p-2 rounded-lg border border-slate-600 text-center">
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-slate-400 block mb-1">Sand Shots</label>
+        <input id="sandShots" type="number" inputmode="numeric" min="0" value="0" oninput="saveCurrentHole()" class="w-full bg-slate-700 p-2 rounded-lg border border-slate-600 text-center">
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-slate-400 block mb-1">Penalties</label>
+        <input id="penShots" type="number" inputmode="numeric" min="0" value="0" oninput="saveCurrentHole()" class="w-full bg-slate-700 p-2 rounded-lg border border-slate-600 text-center">
+      </div>
+    </div>
+
+    <!-- Putting -->
+    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
+      <div class="flex justify-between items-center">
+        <span class="text-sm font-semibold text-slate-300">Putt Distances (m)</span>
+        <span id="autoPuttSummary" class="text-xs bg-emerald-900/60 text-emerald-300 px-2.5 py-1 rounded-full">0 Putts</span>
+      </div>
+      <div class="grid grid-cols-4 gap-2">
+        <div><label class="text-xs text-slate-400">1st Putt</label><input id="putt1" type="number" inputmode="decimal" step="0.1" placeholder="m" oninput="saveCurrentHole()" class="w-full bg-slate-700 p-2 rounded-lg border border-slate-600 text-center"></div>
+        <div><label class="text-xs text-slate-400">2nd Putt</label><input id="putt2" type="number" inputmode="decimal" step="0.1" placeholder="m" oninput="saveCurrentHole()" class="w-full bg-slate-700 p-2 rounded-lg border border-slate-600 text-center"></div>
+        <div><label class="text-xs text-slate-400">3rd Putt</label><input id="putt3" type="number" inputmode="decimal" step="0.1" placeholder="m" oninput="saveCurrentHole()" class="w-full bg-slate-700 p-2 rounded-lg border border-slate-600 text-center"></div>
+        <div><label class="text-xs text-slate-400">4th Putt</label><input id="putt4" type="number" inputmode="decimal" step="0.1" placeholder="m" oninput="saveCurrentHole()" class="w-full bg-slate-700 p-2 rounded-lg border border-slate-600 text-center"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- TAB 2: CURRENT ROUND SUMMARY & SAVE TO APP DB -->
+  <section id="view-round" class="hidden p-4 max-w-lg mx-auto space-y-4">
+    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
+      <div class="flex justify-between items-center">
+        <h2 class="font-bold text-emerald-400">Current Round Stats</h2>
+        <button onclick="resetActiveRound()" class="bg-rose-700/80 text-xs font-bold px-3 py-1.5 rounded-lg">Clear Active</button>
+      </div>
+      <button onclick="saveRoundToHistory()" class="w-full bg-emerald-600 active:bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-lg text-sm">
+        + Save Completed Round to App History
+      </button>
+      <div id="roundMetrics" class="grid grid-cols-2 gap-2 text-xs pt-2"></div>
+    </div>
+
+    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-2">
+      <h3 class="font-bold text-slate-300 text-sm">Round Approach Breakdown</h3>
+      <div id="roundApproachTable" class="text-xs space-y-1"></div>
+    </div>
+  </section>
+
+  <!-- TAB 3: ALL-TIME CAREER DASHBOARD (REPLACES SUMMARY SHEET) -->
+  <section id="view-career" class="hidden p-4 max-w-lg mx-auto space-y-4">
+    <!-- Filter by Course -->
+    <div class="bg-slate-800 p-3 rounded-xl border border-slate-700 flex justify-between items-center">
+      <span class="text-xs font-semibold text-slate-300">Filter Course:</span>
+      <select id="courseFilter" onchange="renderCareerDashboard()" class="bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-600 text-white"></select>
+    </div>
+
+    <!-- Top-Level Career Averages vs Scratch -->
+    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
+      <div class="flex justify-between items-center">
+        <h2 class="font-bold text-emerald-400 text-sm">Career Summary vs Scratch</h2>
+        <span id="careerRoundsCount" class="text-xs bg-slate-700 px-2.5 py-1 rounded-full text-slate-300">0 Rounds</span>
+      </div>
+      <div id="careerOverview" class="grid grid-cols-2 gap-2 text-xs"></div>
+    </div>
+
+    <!-- Scoring Breakdown & Par Averages -->
+    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
+      <h3 class="font-bold text-emerald-400 text-sm">Scoring Averages per Round (vs Scratch)</h3>
+      <div id="careerScoring" class="grid grid-cols-5 gap-1.5 text-center text-xs"></div>
+      <div id="careerParAvgs" class="grid grid-cols-3 gap-2 pt-2 text-center text-xs"></div>
+    </div>
+
+    <!-- Putting Make % by Distance Bucket -->
+    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-2">
+      <h3 class="font-bold text-emerald-400 text-sm">Putting Make % by Distance (vs Scratch)</h3>
+      <div id="careerPutting" class="space-y-2 text-xs"></div>
+    </div>
+
+    <!-- Short Game & Fairway Misses -->
+    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
+      <h3 class="font-bold text-emerald-400 text-sm">Short Game & Tee Miss Tendency</h3>
+      <div id="careerShortGame" class="grid grid-cols-2 gap-2 text-xs"></div>
+    </div>
+
+    <!-- All-Time Approach Matrix (<50m to 220m+) -->
+    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-2">
+      <h3 class="font-bold text-emerald-400 text-sm">Career Approach Matrix (GIR % & Putt Prox)</h3>
+      <div class="grid grid-cols-5 text-[11px] font-bold text-slate-400 border-b border-slate-700 pb-1">
+        <span>Dist (m)</span><span class="text-center">Att</span><span class="text-center">GIR %</span><span class="text-center">Prox</span><span class="text-right">Scratch</span>
+      </div>
+      <div id="careerApproach" class="space-y-1 text-xs"></div>
+    </div>
+  </section>
+
+  <!-- TAB 4: ROUND HISTORY & BACKUP -->
+  <section id="view-history" class="hidden p-4 max-w-lg mx-auto space-y-4">
+    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
+      <div class="flex justify-between items-center">
+        <h2 class="font-bold text-emerald-400 text-sm">Saved Rounds Log</h2>
+        <div class="flex gap-2">
+          <button onclick="exportBackupJSON()" class="bg-slate-700 text-xs px-2.5 py-1.5 rounded-lg border border-slate-600">Backup JSON</button>
+          <label class="bg-slate-700 text-xs px-2.5 py-1.5 rounded-lg border border-slate-600 cursor-pointer">
+            Restore <input type="file" accept=".json" onchange="importBackupJSON(event)" class="hidden">
+          </label>
+        </div>
+      </div>
+      <div id="historyList" class="space-y-2 text-xs"></div>
+    </div>
+  </section>
+
+  <!-- TAB 5: WEDGE CHART & CLUB DISTANCES -->
+  <section id="view-yardage" class="hidden p-4 max-w-lg mx-auto space-y-4">
+    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+      <h2 class="font-bold text-emerald-400 mb-3 text-sm">Wedge Matrix (Carry / Total m)</h2>
+      <table class="w-full text-xs text-left border-collapse">
+        <thead><tr class="border-b border-slate-700 text-slate-400"><th class="py-2">Club</th><th>Hip</th><th>Sh'ld</th><th>Full</th></tr></thead>
+        <tbody class="divide-y divide-slate-700">
+          <tr><td class="py-2 font-bold">60°</td><td>30 / 35m</td><td>50 / 55m</td><td>70 / 73m</td></tr>
+          <tr><td class="py-2 font-bold">56°</td><td>40 / 45m</td><td>60 / 65m</td><td>80 / 86m</td></tr>
+          <tr><td class="py-2 font-bold">52°</td><td>45 / 50m</td><td>70 / 75m</td><td>93 / 100m</td></tr>
+          <tr><td class="py-2 font-bold">48°</td><td>60 / 65m</td><td>75 / 85m</td><td>100 / 105m</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+      <h2 class="font-bold text-emerald-400 mb-3 text-sm">Club Stock Distances (m)</h2>
+      <div class="grid grid-cols-3 gap-2 text-xs">
+        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>Driver:</span><b>230m</b></div>
+        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>3W:</span><b>200m</b></div>
+        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>4i:</span><b>190m</b></div>
+        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>5i:</span><b>175m</b></div>
+        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>6i:</span><b>160m</b></div>
+        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>7i:</span><b>150m</b></div>
+        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>8i:</span><b>140m</b></div>
+        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>9i:</span><b>125m</b></div>
+        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>PW:</span><b>110m</b></div>
+        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>48°:</span><b>100m</b></div>
+        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>52°:</span><b>93m</b></div>
+        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>56°:</span><b>80m</b></div>
+        <div class="bg-slate-700 p-2 rounded flex justify-between"><span>60°:</span><b>70m</b></div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Pre-loaded with your exact 28 historical rounds from Golfing_Stats_Summary.csv
+    const PRELOADED_ROUNDS = [
+      {"date":"27/06/2026","course":"GGC","score":14,"totalPutts":39,"puttAtt":[16,4,3,1,1,7],"puttMade":[15,2,0,0,0,0],"eagles":0,"birdies":0,"pars":7,"bogeys":9,"dblPlus":2,"fwyPct":40,"gir":9,"penalty":2,"chips":6,"upDown":1,"avgChipDist":7.33,"sandShots":2,"avgSandDist":4.05,"sandSave":1,"appAtt":[1,1,4,2,3,0,3,0,0,0,0,0,0],"appGir":[1,1,3,1,3,0,0,0,0,0,0,0,0],"appDis":[6,10,8.67,17,8.33,0,0,0,0,0,0,0,0],"scrambleAtt":6,"scrambleMade":2,"fwyRight":2,"fwyLeft":3,"fwyShort":1,"par3Avg":3.88,"par4Avg":4.5,"par5Avg":6.5},
+      {"date":"4/7/2026","course":"Curlewis","score":16,"totalPutts":35,"puttAtt":[16,3,2,2,0,4],"puttMade":[15,2,0,0,0,1],"eagles":0,"birdies":1,"pars":6,"bogeys":7,"dblPlus":4,"fwyPct":50,"gir":8,"penalty":3,"chips":5,"upDown":3,"avgChipDist":2.44,"sandShots":3,"avgSandDist":5,"sandSave":0,"appAtt":[0,3,1,2,2,3,0,0,4,0,0,1,0],"appGir":[0,3,0,1,1,2,0,0,1,0,0,0,0],"appDis":[0,14.67,0,25,13.1,8,0,0,25,0,0,0,0],"scrambleAtt":7,"scrambleMade":0,"fwyRight":2,"fwyLeft":3,"fwyShort":2,"par3Avg":4,"par4Avg":5,"par5Avg":5.33},
+      {"date":"8/7/2023","course":"Curlewis","score":17,"totalPutts":36,"puttAtt":[15,1,1,2,0,12],"puttMade":[14,1,0,0,0,3],"eagles":0,"birdies":1,"pars":6,"bogeys":6,"dblPlus":5,"fwyPct":46,"gir":8,"penalty":1,"chips":4,"upDown":0,"avgChipDist":8,"sandShots":3,"avgSandDist":6.07,"sandSave":1,"appAtt":[2,1,2,2,2,2,0,1,0,1,1,0,0],"appGir":[1,1,1,0,2,0,0,0,0,1,1,0,0],"appDis":[7.1,13,3.5,0,13,0,0,0,0,6,6,0,0],"scrambleAtt":7,"scrambleMade":1,"fwyRight":2,"fwyLeft":4,"fwyShort":4,"par3Avg":3,"par4Avg":5.27,"par5Avg":0},
+      {"date":"11/7/2026","course":"Curlewis","score":10,"totalPutts":32,"puttAtt":[12,1,6,0,2,4],"puttMade":[12,1,3,0,1,2],"eagles":0,"birdies":3,"pars":5,"bogeys":8,"dblPlus":2,"fwyPct":57,"gir":6,"penalty":2,"chips":7,"upDown":1,"avgChipDist":6.59,"sandShots":3,"avgSandDist":7.55,"sandSave":1,"appAtt":[1,5,1,1,0,3,0,0,0,0,0,2,0],"appGir":[0,1,0,1,0,1,0,0,0,0,0,0,0],"appDis":[0,5.05,0,13,0,25,0,0,0,0,0,0,0],"scrambleAtt":6,"scrambleMade":1,"fwyRight":1,"fwyLeft":4,"fwyShort":1,"par3Avg":3.75,"par4Avg":4.64,"par5Avg":0},
+      {"date":"18/07/2026","course":"GGC","score":13,"totalPutts":36,"puttAtt":[17,4,2,0,1,4],"puttMade":[14,1,1,0,1,1],"eagles":0,"birdies":2,"pars":8,"bogeys":3,"dblPlus":5,"fwyPct":70,"gir":8,"penalty":1,"chips":8,"upDown":3,"avgChipDist":7.53,"sandShots":2,"avgSandDist":3.55,"sandSave":0,"appAtt":[3,4,2,0,2,0,1,2,0,0,1,0,0],"appGir":[3,1,0,0,2,0,0,1,0,0,0,0,0],"appDis":[2.87,6.05,0,0,15.5,0,0,11,0,0,0,0,0],"scrambleAtt":3,"scrambleMade":0,"fwyRight":1,"fwyLeft":2,"fwyShort":0,"par3Avg":4.12,"par4Avg":4,"par5Avg":7},
+      {"date":"21/7/2026","course":"Geelong","score":11,"totalPutts":36,"puttAtt":[18,1,2,5,3,2],"puttMade":[18,0,0,0,0,0],"eagles":0,"birdies":0,"pars":10,"bogeys":5,"dblPlus":3,"fwyPct":45,"gir":10,"penalty":0,"chips":6,"upDown":1,"avgChipDist":2.93,"sandShots":2,"avgSandDist":5,"sandSave":0,"appAtt":[3,2,5,0,2,2,2,0,0,0,0,0,0],"appGir":[3,2,2,0,1,1,1,0,0,0,0,0,0],"appDis":[3.67,5,3.5,0,18,18,3,0,0,0,0,0,0],"scrambleAtt":6,"scrambleMade":0,"fwyRight":4,"fwyLeft":1,"fwyShort":1,"par3Avg":3.62,"par4Avg":4.75,"par5Avg":5},
+      {"date":"25/07/2026","course":"Curlewis","score":17,"totalPutts":34,"puttAtt":[13,4,3,1,1,6],"puttMade":[13,2,1,0,0,2],"eagles":0,"birdies":1,"pars":5,"bogeys":6,"dblPlus":6,"fwyPct":36,"gir":5,"penalty":2,"chips":9,"upDown":2,"avgChipDist":5.8,"sandShots":2,"avgSandDist":2,"sandSave":1,"appAtt":[0,4,2,3,1,2,0,0,2,1,0,0,1],"appGir":[0,3,0,0,0,2,0,0,0,0,0,0,0],"appDis":[0,8.7,0,0,0,11.5,0,0,0,0,0,0,0],"scrambleAtt":9,"scrambleMade":1,"fwyRight":4,"fwyLeft":4,"fwyShort":1,"par3Avg":3.75,"par4Avg":4.91,"par5Avg":6.33},
+      {"date":"1/8/2026","course":"Murray Yarrawonga","score":15,"totalPutts":31,"puttAtt":[9,2,6,4,0,6],"puttMade":[9,2,3,2,0,2],"eagles":0,"birdies":2,"pars":6,"bogeys":4,"dblPlus":6,"fwyPct":46,"gir":6,"penalty":0,"chips":9,"upDown":4,"avgChipDist":5.87,"sandShots":1,"avgSandDist":3,"sandSave":0,"appAtt":[1,4,0,3,1,2,0,0,1,0,1,0,0],"appGir":[1,3,0,1,0,1,0,0,0,0,0,0,0],"appDis":[1.51,10.03,0,2,0,8,0,0,0,0,0,0,0],"scrambleAtt":7,"scrambleMade":0,"fwyRight":3,"fwyLeft":4,"fwyShort":0,"par3Avg":4.8,"par4Avg":4.44,"par5Avg":5.5},
+      {"date":"8/8/2026","course":"Curlewis","score":21,"totalPutts":39,"puttAtt":[19,1,1,2,2,8],"puttMade":[18,0,0,0,0,0],"eagles":0,"birdies":0,"pars":7,"bogeys":3,"dblPlus":8,"fwyPct":64,"gir":7,"penalty":0,"chips":5,"upDown":0,"avgChipDist":7.2,"sandShots":3,"avgSandDist":4.33,"sandSave":0,"appAtt":[0,3,1,4,3,1,1,1,0,0,1,1,0],"appGir":[0,2,0,2,1,1,0,0,0,0,1,0,0],"appDis":[0,6,0,7,10,7,0,0,0,0,9,0,0],"scrambleAtt":5,"scrambleMade":0,"fwyRight":2,"fwyLeft":3,"fwyShort":2,"par3Avg":4.25,"par4Avg":5.18,"par5Avg":6},
+      {"date":"15/08/2026","course":"Curlewis","score":16,"totalPutts":30,"puttAtt":[12,4,1,4,0,5],"puttMade":[11,2,1,2,0,2],"eagles":0,"birdies":1,"pars":6,"bogeys":5,"dblPlus":6,"fwyPct":36,"gir":3,"penalty":1,"chips":10,"upDown":5,"avgChipDist":4.59,"sandShots":4,"avgSandDist":4.53,"sandSave":0,"appAtt":[0,2,4,3,0,0,0,1,0,1,1,0,1],"appGir":[0,0,1,1,0,0,0,0,0,0,0,0,0],"appDis":[0,0,11,7.1,0,0,0,0,0,0,0,0,0],"scrambleAtt":9,"scrambleMade":0,"fwyRight":2,"fwyLeft":5,"fwyShort":2,"par3Avg":4.25,"par4Avg":4.64,"par5Avg":6.33},
+      {"date":"22/08/2026","course":"Curlewis","score":25,"totalPutts":41,"puttAtt":[18,1,5,1,0,5],"puttMade":[18,0,0,0,0,0],"eagles":0,"birdies":0,"pars":2,"bogeys":8,"dblPlus":8,"fwyPct":36,"gir":4,"penalty":3,"chips":8,"upDown":0,"avgChipDist":8,"sandShots":3,"avgSandDist":3.83,"sandSave":0,"appAtt":[0,2,0,1,0,2,0,1,1,1,3,0,1],"appGir":[0,0,0,0,0,0,0,0,0,0,2,0,0],"appDis":[0,0,0,0,0,0,0,0,0,0,22.5,0,0],"scrambleAtt":9,"scrambleMade":0,"fwyRight":5,"fwyLeft":1,"fwyShort":3,"par3Avg":4,"par4Avg":5.36,"par5Avg":7},
+      {"date":"29/08/2026","course":"Geelong","score":8,"totalPutts":30,"puttAtt":[12,3,2,1,0,5],"puttMade":[12,2,0,1,0,2],"eagles":0,"birdies":3,"pars":6,"bogeys":7,"dblPlus":2,"fwyPct":70,"gir":7,"penalty":0,"chips":10,"upDown":4,"avgChipDist":5.04,"sandShots":1,"avgSandDist":2,"sandSave":0,"appAtt":[1,6,2,3,0,0,1,2,0,0,0,0,0],"appGir":[1,3,2,0,0,0,0,1,0,0,0,0,0],"appDis":[1.51,4.37,9.05,0,0,0,0,18,0,0,0,0,0],"scrambleAtt":3,"scrambleMade":0,"fwyRight":2,"fwyLeft":1,"fwyShort":0,"par3Avg":3.62,"par4Avg":4.38,"par5Avg":5},
+      {"date":"30/08/2026","course":"Werribee","score":12,"totalPutts":29,"puttAtt":[8,3,4,2,4,5],"puttMade":[8,3,3,0,2,2],"eagles":0,"birdies":1,"pars":8,"bogeys":5,"dblPlus":4,"fwyPct":57,"gir":5,"penalty":1,"chips":7,"upDown":6,"avgChipDist":2.77,"sandShots":4,"avgSandDist":3.77,"sandSave":0,"appAtt":[0,2,1,3,1,0,1,1,2,1,0,0,0],"appGir":[0,0,0,1,1,0,0,0,2,1,0,0,0],"appDis":[0,0,0,5,9,0,0,0,9.55,15,0,0,0],"scrambleAtt":6,"scrambleMade":0,"fwyRight":3,"fwyLeft":3,"fwyShort":0,"par3Avg":3.5,"par4Avg":4.7,"par5Avg":5.75},
+      {"date":"5/9/2026","course":"GGC - Stroke","score":20,"totalPutts":38,"puttAtt":[16,2,2,5,0,4],"puttMade":[15,2,0,1,0,0],"eagles":0,"birdies":1,"pars":4,"bogeys":9,"dblPlus":4,"fwyPct":30,"gir":5,"penalty":0,"chips":10,"upDown":0,"avgChipDist":6.3,"sandShots":1,"avgSandDist":3,"sandSave":0,"appAtt":[1,6,3,0,0,0,1,2,0,0,0,0,0],"appGir":[0,2,0,0,0,0,1,1,0,0,0,0,0],"appDis":[0,7.55,0,0,0,0,5,13,0,0,0,0,0],"scrambleAtt":7,"scrambleMade":0,"fwyRight":4,"fwyLeft":3,"fwyShort":0,"par3Avg":4.38,"par4Avg":4.88,"par5Avg":11},
+      {"date":"12/9/2026","course":"GGC","score":14,"totalPutts":35,"puttAtt":[13,2,3,3,0,7],"puttMade":[12,1,3,1,0,1],"eagles":0,"birdies":0,"pars":8,"bogeys":7,"dblPlus":3,"fwyPct":50,"gir":7,"penalty":0,"chips":8,"upDown":3,"avgChipDist":6.54,"sandShots":2,"avgSandDist":6.5,"sandSave":0,"appAtt":[2,3,2,1,2,1,1,0,0,0,0,0,0],"appGir":[2,2,1,1,1,0,0,0,0,0,0,0,0],"appDis":[5,13,8,7,15,0,0,0,0,0,0,0,0],"scrambleAtt":5,"scrambleMade":0,"fwyRight":4,"fwyLeft":0,"fwyShort":1,"par3Avg":3.88,"par4Avg":4.5,"par5Avg":6.5},
+      {"date":"19/09/2026","course":"GGC","score":11,"totalPutts":29,"puttAtt":[11,4,5,2,0,6],"puttMade":[10,2,4,0,0,1],"eagles":1,"birdies":2,"pars":5,"bogeys":5,"dblPlus":5,"fwyPct":60,"gir":6,"penalty":2,"chips":9,"upDown":3,"avgChipDist":3.98,"sandShots":4,"avgSandDist":6.4,"sandSave":1,"appAtt":[1,5,2,2,1,0,3,1,0,0,0,1,0],"appGir":[1,2,1,0,0,0,0,0,0,0,0,0,0],"appDis":[1.51,4.75,9,0,0,0,3,0,0,0,0,0,0],"scrambleAtt":4,"scrambleMade":1,"fwyRight":1,"fwyLeft":1,"fwyShort":2,"par3Avg":3.75,"par4Avg":4.5,"par5Avg":5.5},
+      {"date":"6/10/2026","course":"Creek","score":19,"totalPutts":34,"puttAtt":[17,1,1,1,2,7],"puttMade":[16,0,0,1,1,0],"eagles":0,"birdies":0,"pars":7,"bogeys":4,"dblPlus":7,"fwyPct":50,"gir":5,"penalty":2,"chips":10,"upDown":3,"avgChipDist":4.28,"sandShots":3,"avgSandDist":6.33,"sandSave":0,"appAtt":[2,1,1,1,3,0,1,1,1,0,0,1,1],"appGir":[2,0,2,0,0,0,0,0,0,0,0,1,0],"appDis":[8.5,0,13,0,0,0,0,0,0,0,0,30,0],"scrambleAtt":7,"scrambleMade":0,"fwyRight":3,"fwyLeft":2,"fwyShort":2,"par3Avg":3.75,"par4Avg":5.2,"par5Avg":6},
+      {"date":"9/10/2026","course":"Beach","score":22,"totalPutts":38,"puttAtt":[14,2,3,5,1,7],"puttMade":[14,1,2,1,0,0],"eagles":0,"birdies":0,"pars":5,"bogeys":6,"dblPlus":7,"fwyPct":57,"gir":4,"penalty":6,"chips":7,"upDown":3,"avgChipDist":4.74,"sandShots":1,"avgSandDist":3,"sandSave":0,"appAtt":[0,5,2,0,1,2,0,3,0,1,0,0,0],"appGir":[0,1,1,0,0,0,0,2,0,0,0,0,0],"appDis":[0,15,12,0,0,0,0,11.5,0,0,0,0,0],"scrambleAtt":6,"scrambleMade":0,"fwyRight":5,"fwyLeft":1,"fwyShort":0,"par3Avg":4,"par4Avg":5.18,"par5Avg":6.5},
+      {"date":"10/10/2026","course":"Geelong","score":16,"totalPutts":30,"puttAtt":[11,4,1,2,2,7],"puttMade":[11,3,1,2,1,0],"eagles":0,"birdies":2,"pars":2,"bogeys":11,"dblPlus":3,"fwyPct":30,"gir":4,"penalty":1,"chips":8,"upDown":2,"avgChipDist":6.2,"sandShots":5,"avgSandDist":7.32,"sandSave":1,"appAtt":[2,3,3,1,0,0,1,3,0,0,0,0,0],"appGir":[1,2,1,0,0,0,0,0,0,0,0,0,0],"appDis":[3.1,5.55,10,0,0,0,0,0,0,0,0,0,0],"scrambleAtt":7,"scrambleMade":1,"fwyRight":5,"fwyLeft":1,"fwyShort":1,"par3Avg":4,"par4Avg":4.75,"par5Avg":6},
+      {"date":"26/05/2026","course":"Curlewis","score":10,"totalPutts":34,"puttAtt":[12,2,3,3,2,4],"puttMade":[12,2,2,1,1,0],"eagles":0,"birdies":0,"pars":9,"bogeys":8,"dblPlus":1,"fwyPct":36,"gir":7,"penalty":0,"chips":6,"upDown":3,"avgChipDist":5.79,"sandShots":3,"avgSandDist":8.03,"sandSave":0,"appAtt":[0,3,2,2,2,2,3,0,0,1,0,0,0],"appGir":[0,3,0,1,2,0,0,0,0,0,0,0,0],"appDis":[0,8.33,0,6,9,0,0,0,0,0,0,0,0],"scrambleAtt":9,"scrambleMade":0,"fwyRight":5,"fwyLeft":3,"fwyShort":1,"par3Avg":3.75,"par4Avg":4.55,"par5Avg":5.33},
+      {"date":"30/05/2026","course":"GGC champs 2","score":7,"totalPutts":32,"puttAtt":[13,1,3,1,2,8],"puttMade":[13,1,2,1,0,1],"eagles":0,"birdies":2,"pars":8,"bogeys":7,"dblPlus":1,"fwyPct":70,"gir":9,"penalty":0,"chips":6,"upDown":1,"avgChipDist":6.35,"sandShots":2,"avgSandDist":6.75,"sandSave":0,"appAtt":[1,3,1,4,0,0,1,2,0,0,0,0,0],"appGir":[1,2,1,2,0,0,0,1,0,0,0,0,0],"appDis":[5.5,5.55,3.1,12,0,0,0,6,0,0,0,0,0],"scrambleAtt":3,"scrambleMade":0,"fwyRight":3,"fwyLeft":0,"fwyShort":0,"par3Avg":3.62,"par4Avg":4.12,"par5Avg":5.5},
+      {"date":"1/6/2026","course":"13th Beach","score":13,"totalPutts":34,"puttAtt":[14,3,2,1,2,7],"puttMade":[13,2,1,0,1,1],"eagles":0,"birdies":1,"pars":7,"bogeys":7,"dblPlus":3,"fwyPct":57,"gir":8,"penalty":1,"chips":6,"upDown":1,"avgChipDist":5.2,"sandShots":3,"avgSandDist":7.7,"sandSave":1,"appAtt":[0,3,2,2,2,0,2,1,2,0,0,0,0],"appGir":[0,3,1,2,0,0,1,0,1,0,0,0,0],"appDis":[0,8,8,17,0,0,8,0,1.1,0,0,0,0],"scrambleAtt":6,"scrambleMade":1,"fwyRight":4,"fwyLeft":2,"fwyShort":0,"par3Avg":3.75,"par4Avg":4.7,"par5Avg":11},
+      {"date":"10/6/2026","course":"Curlewis","score":14,"totalPutts":32,"puttAtt":[15,0,3,2,0,5],"puttMade":[15,0,1,1,0,1],"eagles":0,"birdies":2,"pars":6,"bogeys":5,"dblPlus":5,"fwyPct":29,"gir":7,"penalty":1,"chips":9,"upDown":2,"avgChipDist":7.47,"sandShots":0,"avgSandDist":0,"sandSave":0,"appAtt":[1,2,3,2,2,0,1,1,0,3,0,0,0],"appGir":[1,1,2,1,1,0,0,0,0,1,0,0,0],"appDis":[1.1,12,7,0,5.51,0,0,0,0,14,0,0,0],"scrambleAtt":10,"scrambleMade":0,"fwyRight":4,"fwyLeft":6,"fwyShort":0,"par3Avg":3.25,"par4Avg":5,"par5Avg":5.67},
+      {"date":"13/06/2026","course":"Curlewis","score":18,"totalPutts":39,"puttAtt":[17,2,3,2,2,8],"puttMade":[16,2,0,0,0,0],"eagles":0,"birdies":0,"pars":5,"bogeys":8,"dblPlus":5,"fwyPct":57,"gir":8,"penalty":2,"chips":5,"upDown":0,"avgChipDist":4.6,"sandShots":4,"avgSandDist":7.5,"sandSave":0,"appAtt":[1,2,2,2,2,4,0,0,0,1,0,1,1],"appGir":[1,2,0,2,1,1,0,0,0,0,0,1,0],"appDis":[5,25,0,16,10,2,0,0,0,0,0,7,0],"scrambleAtt":6,"scrambleMade":0,"fwyRight":1,"fwyLeft":5,"fwyShort":0,"par3Avg":4.33,"par4Avg":4.82,"par5Avg":6.67},
+      {"date":"17/06/2026","course":"Curlewis","score":10,"totalPutts":35,"puttAtt":[14,6,0,3,2,6],"puttMade":[14,2,0,1,1,0],"eagles":0,"birdies":1,"pars":9,"bogeys":5,"dblPlus":3,"fwyPct":79,"gir":9,"penalty":0,"chips":8,"upDown":2,"avgChipDist":6.39,"sandShots":3,"avgSandDist":7.17,"sandSave":0,"appAtt":[5,5,3,1,1,0,0,1,0,0,0,0,0],"appGir":[3,2,1,0,0,0,0,1,0,0,0,0,0],"appDis":[2.83,11.5,11,0,0,0,0,3.1,0,0,0,0,0],"scrambleAtt":3,"scrambleMade":0,"fwyRight":1,"fwyLeft":2,"fwyShort":0,"par3Avg":4,"par4Avg":4.64,"par5Avg":0},
+      {"date":"21/06/2026","course":"13th Beach","score":11,"totalPutts":34,"puttAtt":[14,1,3,1,3,6],"puttMade":[14,1,1,0,0,1],"eagles":0,"birdies":2,"pars":7,"bogeys":5,"dblPlus":4,"fwyPct":86,"gir":8,"penalty":2,"chips":8,"upDown":3,"avgChipDist":5.16,"sandShots":0,"avgSandDist":0,"sandSave":0,"appAtt":[2,4,0,0,2,2,2,3,0,0,0,0,0],"appGir":[1,3,0,0,1,0,1,2,0,0,0,0,0],"appDis":[15,6,0,0,12,0,20,6.05,0,0,0,0,0],"scrambleAtt":2,"scrambleMade":0,"fwyRight":0,"fwyLeft":1,"fwyShort":1,"par3Avg":3.75,"par4Avg":4.5,"par5Avg":11},
+      {"date":"24/06/2026","course":"Curlewis","score":11,"totalPutts":34,"puttAtt":[12,3,1,1,2,5],"puttMade":[12,3,0,1,0,1],"eagles":0,"birdies":1,"pars":8,"bogeys":6,"dblPlus":3,"fwyPct":71,"gir":8,"penalty":1,"chips":8,"upDown":3,"avgChipDist":6.16,"sandShots":1,"avgSandDist":5,"sandSave":0,"appAtt":[1,4,3,0,3,0,1,1,0,1,0,0,0],"appGir":[1,2,3,0,1,0,0,0,0,1,0,0,0],"appDis":[1.51,8,12.67,0,28,0,0,0,0,20,0,0,0],"scrambleAtt":4,"scrambleMade":0,"fwyRight":3,"fwyLeft":1,"fwyShort":0,"par3Avg":3.5,"par4Avg":4.73,"par5Avg":5.33},
+      {"date":"1/7/2026","course":"Victoria","score":14,"totalPutts":37,"puttAtt":[13,1,2,0,1,6],"puttMade":[13,0,2,0,0,0],"eagles":0,"birdies":0,"pars":7,"bogeys":8,"dblPlus":3,"fwyPct":21,"gir":9,"penalty":0,"chips":4,"upDown":0,"avgChipDist":7,"sandShots":3,"avgSandDist":8.33,"sandSave":0,"appAtt":[0,3,2,0,4,1,2,1,0,0,0,0,0],"appGir":[0,3,2,0,2,0,0,0,0,0,0,0,0],"appDis":[0,18.33,11.5,0,6.5,0,0,0,0,0,0,0,0],"scrambleAtt":11,"scrambleMade":3,"fwyRight":6,"fwyLeft":4,"fwyShort":1,"par3Avg":3.5,"par4Avg":5.2,"par5Avg":5.25}
+    ];
+
+    const APP_LABELS = ['<50','50-104','105-119','120-129','130-139','140-149','150-159','160-169','170-179','180-189','190-199','200-219','220+'];
+    const SCRATCH_GIR = [75, 69, 63, 57, 51, 46, 40, 34, 28, 22, 16, 10, 13];
+    const SCRATCH_PROX = [5.0, 5.9, 6.8, 7.7, 8.6, 9.5, 10.4, 11.3, 12.2, 13.1, 14.0, 14.9, 15.8];
+    const PUTT_LABELS = ['<=1m', '1-1.9m', '2-2.9m', '3-3.9m', '4-4.9m', '>5m'];
+    const SCRATCH_PUTT = [88, 75, 45, 33, 20, 13];
+
+    const defaultPars = [4,3,4,5,3,3,4,3,4,4,3,4,5,3,3,4,3,4];
+    let currentHole = 0;
+    let holes = [];
+    let roundHistory = [];
+
+    function initApp() {
+      // Load or seed historical rounds database
+      const savedHistory = localStorage.getItem('golfApp_history_v1');
+      if (savedHistory) {
+        roundHistory = JSON.parse(savedHistory);
+      } else {
+        roundHistory = [...PRELOADED_ROUNDS];
+        localStorage.setItem('golfApp_history_v1', JSON.stringify(roundHistory));
+      }
+
+      // Load active round
+      const savedActive = localStorage.getItem('golfApp_activeRound_v1');
+      if (savedActive) {
+        const parsed = JSON.parse(savedActive);
+        holes = parsed.holes;
+        document.getElementById('courseName').value = parsed.course || 'GGC';
+        document.getElementById('roundDate').value = parsed.date || new Date().toISOString().split('T')[0];
+      } else {
+        initFreshHoles();
+      }
+      populateCourseFilter();
+      renderHole();
+    }
+
+    function initFreshHoles() {
+      holes = Array.from({length: 18}, (_, i) => ({
+        hole: i + 1, par: defaultPars[i], relScore: 0, fwy: 'Yes', gir: 'No',
+        appDist: '', penShots: 0, chips: 0, sandShots: 0, putts: ['', '', '', '']
+      }));
+      document.getElementById('roundDate').valueAsDate = new Date();
+    }
+
+    function persistActiveRound() {
+      localStorage.setItem('golfApp_activeRound_v1', JSON.stringify({
+        course: document.getElementById('courseName').value,
+        date: document.getElementById('roundDate').value,
+        holes: holes
+      }));
+    }
+
+    function resetActiveRound() {
+      if (confirm('Clear current active round inputs and start a fresh 18 holes?')) {
+        localStorage.removeItem('golfApp_activeRound_v1');
+        currentHole = 0;
+        initFreshHoles();
+        renderHole();
+        renderActiveRoundSummary();
+      }
+    }
+
+    function renderHole() {
+      const h = holes[currentHole];
+      document.getElementById('holeTitle').innerText = `Hole ${h.hole}`;
+      document.querySelectorAll('#parButtons button').forEach(b => b.classList.toggle('active', Number(b.dataset.val) === h.par));
+      document.getElementById('fairwaySection').style.display = h.par === 3 ? 'none' : 'block';
+      document.querySelectorAll('#scoreButtons button').forEach(b => b.classList.toggle('active', Number(b.dataset.val) === h.relScore));
+      document.querySelectorAll('#fwyButtons button').forEach(b => b.classList.toggle('active', b.dataset.val === h.fwy));
+      document.querySelectorAll('#girButtons button').forEach(b => b.classList.toggle('active', b.dataset.val === h.gir));
+
+      document.getElementById('appDist').value = h.appDist;
+      document.getElementById('chips').value = h.chips;
+      document.getElementById('sandShots').value = h.sandShots;
+      document.getElementById('penShots').value = h.penShots;
+      ['putt1','putt2','putt3','putt4'].forEach((id, idx) => document.getElementById(id).value = h.putts[idx]);
+      updateLiveHeader();
+    }
+
+    function saveCurrentHole() {
+      const h = holes[currentHole];
+      h.appDist = document.getElementById('appDist').value;
+      h.chips = Number(document.getElementById('chips').value) || 0;
+      h.sandShots = Number(document.getElementById('sandShots').value) || 0;
+      h.penShots = Number(document.getElementById('penShots').value) || 0;
+      h.putts = [
+        document.getElementById('putt1').value,
+        document.getElementById('putt2').value,
+        document.getElementById('putt3').value,
+        document.getElementById('putt4').value
+      ];
+      persistActiveRound();
+      updateLiveHeader();
+    }
+
+    function updateLiveHeader() {
+      const h = holes[currentHole];
+      const activePutts = h.putts.filter(p => p !== '' && !isNaN(p)).map(Number);
+      const puttCount = activePutts.length;
+      const upDown = (h.chips > 0 && puttCount === 1 && h.relScore <= 0) ? ' • Up & Down!' : '';
+      const sandSave = (h.sandShots > 0 && puttCount === 1 && h.relScore <= 0) ? ' • Sand Save!' : '';
+      document.getElementById('autoPuttSummary').innerText = `${puttCount} Putts${upDown}${sandSave}`;
+
+      const totalRel = holes.reduce((acc, el) => acc + el.relScore, 0);
+      document.getElementById('liveScore').innerText = totalRel === 0 ? 'E' : (totalRel > 0 ? `+${totalRel}` : totalRel);
+    }
+
+    function setPar(p) { holes[currentHole].par = p; persistActiveRound(); renderHole(); }
+    function setRelScore(s) { holes[currentHole].relScore = s; persistActiveRound(); renderHole(); }
+    function setFwy(f) { holes[currentHole].fwy = f; persistActiveRound(); renderHole(); }
+    function setGir(g) { holes[currentHole].gir = g; persistActiveRound(); renderHole(); }
+    function changeHole(delta) { saveCurrentHole(); currentHole = (currentHole + delta + 18) % 18; renderHole(); }
+
+    function switchTab(tab) {
+      ['play','round','career','history','yardage'].forEach(t => {
+        document.getElementById(`view-${t}`).classList.toggle('hidden', t !== tab);
+        const btn = document.getElementById(`tab-${t}`);
+        btn.classList.toggle('border-b-2', t === tab);
+        btn.classList.toggle('border-emerald-500', t === tab);
+        btn.classList.toggle('text-emerald-400', t === tab);
+        btn.classList.toggle('text-slate-400', t !== tab);
+      });
+      if (tab === 'round') renderActiveRoundSummary();
+      if (tab === 'career') renderCareerDashboard();
+      if (tab === 'history') renderHistoryTab();
+    }
+
+    function avg(arr) { return arr.length ? Number((arr.reduce((a,b)=>a+b, 0) / arr.length).toFixed(2)) : 0; }
+
+    function compileActiveRoundRecord() {
+      const puttMins = [0, 1.0001, 2.0, 3.0, 4.0, 5.0];
+      const puttMaxs = [1.0, 1.999, 2.999, 3.999, 4.999, 999];
+      const appMins = [0, 50, 105, 120, 130, 140, 150, 160, 170, 180, 190, 200, 220];
+      const appMaxs = [49.9, 104.9, 119.9, 129.9, 139.9, 149.9, 159.9, 169.9, 179.9, 189.9, 199.9, 219.9, 999];
+
+      let rec = {
+        date: document.getElementById('roundDate').value || new Date().toLocaleDateString('en-AU'),
+        course: (document.getElementById('courseName').value || 'Course').trim(),
+        score: 0, totalPutts: 0,
+        puttAtt: [0,0,0,0,0,0], puttMade: [0,0,0,0,0,0],
+        eagles: 0, birdies: 0, pars: 0, bogeys: 0, dblPlus: 0,
+        fwyPct: 0, gir: 0, penalty: 0, chips: 0, upDown: 0, avgChipDist: 0,
+        sandShots: 0, avgSandDist: 0, sandSave: 0,
+        appAtt: Array(13).fill(0), appGir: Array(13).fill(0), appDis: Array(13).fill(0),
+        scrambleAtt: 0, scrambleMade: 0, fwyRight: 0, fwyLeft: 0, fwyShort: 0,
+        par3Avg: 0, par4Avg: 0, par5Avg: 0
+      };
+
+      let fwyHit = 0, fwyAtt = 0;
+      let chipDists = [], sandDists = [];
+      let appDistLists = Array.from({length: 13}, () => []);
+      let parScores = {3: [], 4: [], 5: []};
+
+      holes.forEach(h => {
+        rec.score += h.relScore;
+        parScores[h.par].push(h.par + h.relScore);
+        if (h.relScore <= -2) rec.eagles++;
+        else if (h.relScore === -1) rec.birdies++;
+        else if (h.relScore === 0) rec.pars++;
+        else if (h.relScore === 1) rec.bogeys++;
+        else rec.dblPlus++;
+
+        if (h.par > 3) {
+          fwyAtt++;
+          if (h.fwy === 'Yes') fwyHit++;
+          if (h.fwy === 'Right') rec.fwyRight++;
+          if (h.fwy === 'Left') rec.fwyLeft++;
+          if (h.fwy === 'Short') rec.fwyShort++;
+        }
+
+        const activePutts = h.putts.filter(p => p !== '' && !isNaN(p)).map(Number);
+        const puttCount = activePutts.length;
+        rec.totalPutts += puttCount;
+        const firstPutt = puttCount > 0 ? activePutts[0] : 0;
+
+        activePutts.forEach((dist, idx) => {
+          const isMade = (idx === puttCount - 1);
+          for (let b = 0; b < 6; b++) {
+            if (dist >= puttMins[b] && dist <= puttMaxs[b]) {
+              rec.puttAtt[b]++;
+              if (isMade) rec.puttMade[b]++;
+              break;
+            }
+          }
+        });
+
+        if (h.gir === 'Yes') rec.gir++;
+        else { rec.scrambleAtt++; if (h.relScore <= 0) rec.scrambleMade++; }
+
+        rec.penalty += h.penShots;
+        rec.chips += h.chips;
+        if (h.chips > 0) {
+          if (firstPutt > 0) chipDists.push(firstPutt);
+          if (puttCount === 1 && h.relScore <= 0) rec.upDown++;
+        }
+
+        rec.sandShots += h.sandShots;
+        if (h.sandShots > 0) {
+          if (firstPutt > 0) sandDists.push(firstPutt);
+          if (puttCount === 1 && h.relScore <= 0) rec.sandSave++;
+        }
+
+        if (h.appDist !== '' && !isNaN(h.appDist)) {
+          const d = Number(h.appDist);
+          for (let b = 0; b < 13; b++) {
+            if (d >= appMins[b] && d <= appMaxs[b]) {
+              rec.appAtt[b]++;
+              if (h.gir === 'Yes') {
+                rec.appGir[b]++;
+                if (firstPutt > 0) appDistLists[b].push(firstPutt);
+              }
+              break;
+            }
+          }
+        }
+      });
+
+      rec.fwyPct = fwyAtt ? Math.round((fwyHit / fwyAtt) * 100) : 0;
+      rec.avgChipDist = avg(chipDists);
+      rec.avgSandDist = avg(sandDists);
+      rec.appDis = appDistLists.map(arr => avg(arr));
+      rec.par3Avg = avg(parScores[3]);
+      rec.par4Avg = avg(parScores[4]);
+      rec.par5Avg = avg(parScores[5]);
+      return rec;
+    }
+
+    function renderActiveRoundSummary() {
+      const r = compileActiveRoundRecord();
+      const items = [
+        ['Score (vs Par)', r.score > 0 ? `+${r.score}` : r.score],
+        ['Total Putts', `${r.totalPutts} (${(r.totalPutts/18).toFixed(2)})`],
+        ['Fairways Hit %', `${r.fwyPct}%`],
+        ['GIR', `${r.gir} / 18 (${Math.round(r.gir/18*100)}%)`],
+        ['Up & Downs', `${r.upDown} / ${r.chips}`],
+        ['Sand Saves', `${r.sandSave} / ${r.sandShots}`],
+        ['Scramble', `${r.scrambleMade} / ${r.scrambleAtt}`],
+        ['Penalties', r.penalty],
+        ['Avg Chip Prox', `${r.avgChipDist}m`],
+        ['Avg Sand Prox', `${r.avgSandDist}m`],
+        ['Birdies / Pars', `${r.birdies} / ${r.pars}`],
+        ['Bogeys / Dbl+', `${r.bogeys} / ${r.dblPlus}`]
+      ];
+      document.getElementById('roundMetrics').innerHTML = items.map(([k,v]) =>
+        `<div class="bg-slate-700/60 p-2.5 rounded-lg flex justify-between"><span>${k}</span><b class="text-emerald-300">${v}</b></div>`
+      ).join('');
+
+      document.getElementById('roundApproachTable').innerHTML = APP_LABELS.map((label, i) =>
+        `<div class="flex justify-between border-b border-slate-700 py-1">
+          <span class="font-semibold w-20">${label}m</span>
+          <span>Att: ${r.appAtt[i]}</span>
+          <span>GIR: ${r.appGir[i]}</span>
+          <span>Prox: ${r.appDis[i]}m</span>
+        </div>`
+      ).join('');
+    }
+
+    function saveRoundToHistory() {
+      const r = compileActiveRoundRecord();
+      roundHistory.push(r);
+      localStorage.setItem('golfApp_history_v1', JSON.stringify(roundHistory));
+      populateCourseFilter();
+      alert(`Saved round at ${r.course} (+${r.score}, ${r.totalPutts} putts) to your Career Database! Total rounds: ${roundHistory.length}`);
+      switchTab('career');
+    }
+
+    function populateCourseFilter() {
+      const sel = document.getElementById('courseFilter');
+      const currentVal = sel.value || 'ALL';
+      const courses = Array.from(new Set(roundHistory.map(r => r.course.trim()))).sort();
+      sel.innerHTML = `<option value="ALL">All Courses (${roundHistory.length} Rounds)</option>` +
+        courses.map(c => `<option value="${c}">${c} (${roundHistory.filter(r => r.course.trim() === c).length})</option>`).join('');
+      sel.value = courses.includes(currentVal) ? currentVal : 'ALL';
+    }
+
+    function renderCareerDashboard() {
+      const filter = document.getElementById('courseFilter').value || 'ALL';
+      const rounds = filter === 'ALL' ? roundHistory : roundHistory.filter(r => r.course.trim() === filter);
+      const n = rounds.length;
+      document.getElementById('careerRoundsCount').innerText = `${n} Rounds`;
+      if (n === 0) return;
+
+      const avgScore = (rounds.reduce((a,r)=>a+r.score,0)/n).toFixed(2);
+      const bestScore = Math.min(...rounds.map(r=>r.score));
+      const puttsArr = rounds.map(r=>r.totalPutts);
+      const avgPutts = (puttsArr.reduce((a,b)=>a+b,0)/n).toFixed(2);
+      const lowPutts = Math.min(...puttsArr);
+      const highPutts = Math.max(...puttsArr);
+
+      const fwyArr = rounds.map(r=>r.fwyPct);
+      const avgFwy = Math.round(fwyArr.reduce((a,b)=>a+b,0)/n);
+      const bestFwy = Math.round(Math.max(...fwyArr));
+      const worstFwy = Math.round(Math.min(...fwyArr));
+
+      const totalGir = rounds.reduce((a,r)=>a+r.gir,0);
+      const girPct = ((totalGir / (n * 18)) * 100).toFixed(1);
+      const avgPen = (rounds.reduce((a,r)=>a+r.penalty,0)/n).toFixed(2);
+
+      const overviewCards = [
+        ['Avg Score vs Par', `+${avgScore} (Best: +${bestScore})`],
+        ['GIR % (Scratch: 52%)', `${girPct}%`],
+        ['Avg Putts / Rd', `${avgPutts} (${(avgPutts/18).toFixed(2)}/h)`],
+        ['Putts Low / High', `${lowPutts} / ${highPutts}`],
+        ['Fairways Avg (Scr: 51%)', `${avgFwy}%`],
+        ['Fairways Best / Worst', `${bestFwy}% / ${worstFwy}%`],
+        ['Penalties / Round', avgPen],
+        ['Total Rounds Logged', n]
+      ];
+      document.getElementById('careerOverview').innerHTML = overviewCards.map(([k,v]) =>
+        `<div class="bg-slate-700/60 p-2.5 rounded-lg flex flex-col justify-between"><span class="text-slate-400 text-[11px]">${k}</span><b class="text-emerald-300 text-sm mt-0.5">${v}</b></div>`
+      ).join('');
+
+      // Scoring Breakdown vs Scratch
+      const scItems = [
+        ['Eagles', (rounds.reduce((a,r)=>a+r.eagles,0)/n).toFixed(2), '0.04'],
+        ['Birdies', (rounds.reduce((a,r)=>a+r.birdies,0)/n).toFixed(2), '2.34'],
+        ['Pars', (rounds.reduce((a,r)=>a+r.pars,0)/n).toFixed(2), '7.92'],
+        ['Bogeys', (rounds.reduce((a,r)=>a+r.bogeys,0)/n).toFixed(2), '3.87'],
+        ['Dbl+', (rounds.reduce((a,r)=>a+r.dblPlus,0)/n).toFixed(2), '0.27']
+      ];
+      document.getElementById('careerScoring').innerHTML = scItems.map(([label, val, scr]) =>
+        `<div class="bg-slate-700/60 p-2 rounded-lg">
+          <div class="text-[10px] text-slate-400">${label}</div>
+          <div class="font-bold text-emerald-300 text-sm">${val}</div>
+          <div class="text-[10px] text-slate-400">Scr: ${scr}</div>
+        </div>`
+      ).join('');
+
+      const p3 = rounds.filter(r=>r.par3Avg>0).map(r=>r.par3Avg);
+      const p4 = rounds.filter(r=>r.par4Avg>0).map(r=>r.par4Avg);
+      const p5 = rounds.filter(r=>r.par5Avg>0).map(r=>r.par5Avg);
+      document.getElementById('careerParAvgs').innerHTML = [
+        ['Par 3 Avg', avg(p3), '3.16'],
+        ['Par 4 Avg', avg(p4), '4.09'],
+        ['Par 5 Avg', avg(p5), '4.76']
+      ].map(([k,v,scr]) =>
+        `<div class="bg-slate-700/40 p-2 rounded-lg border border-slate-700">
+          <div class="text-[11px] text-slate-300">${k}</div>
+          <div class="font-bold text-white text-sm">${v}</div>
+          <div class="text-[10px] text-slate-400">Scratch: ${scr}</div>
+        </div>`
+      ).join('');
+
+      // Putting Buckets
+      document.getElementById('careerPutting').innerHTML = PUTT_LABELS.map((label, i) => {
+        const att = rounds.reduce((a,r)=>a+(r.puttAtt[i]||0), 0);
+        const made = rounds.reduce((a,r)=>a+(r.puttMade[i]||0), 0);
+        const pct = att ? Math.round((made/att)*100) : 0;
+        return `<div class="space-y-1">
+          <div class="flex justify-between">
+            <span class="font-semibold">${label} <span class="text-slate-400 font-normal">(${made}/${att})</span></span>
+            <span><b class="text-emerald-300">${pct}%</b> <span class="text-slate-400">(Scratch: ${SCRATCH_PUTT[i]}%)</span></span>
+          </div>
+          <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+            <div class="bg-emerald-500 h-2" style="width:${Math.min(100, pct)}%"></div>
+          </div>
+        </div>`;
+      }).join('');
+
+      // Short Game & Tee Misses
+      const totChips = rounds.reduce((a,r)=>a+r.chips,0);
+      const totUpDown = rounds.reduce((a,r)=>a+r.upDown,0);
+      const chipDists = rounds.filter(r=>r.avgChipDist>0).map(r=>r.avgChipDist);
+      const totSand = rounds.reduce((a,r)=>a+r.sandShots,0);
+      const totSandSave = rounds.reduce((a,r)=>a+r.sandSave,0);
+      const sandDists = rounds.filter(r=>r.avgSandDist>0).map(r=>r.avgSandDist);
+      const totScramAtt = rounds.reduce((a,r)=>a+r.scrambleAtt,0);
+      const totScramMade = rounds.reduce((a,r)=>a+r.scrambleMade,0);
+      const totR = rounds.reduce((a,r)=>a+r.fwyRight,0);
+      const totL = rounds.reduce((a,r)=>a+r.fwyLeft,0);
+      const totS = rounds.reduce((a,r)=>a+r.fwyShort,0);
+
+      const sgCards = [
+        ['Up & Down %', `${totChips ? ((totUpDown/totChips)*100).toFixed(1) : 0}% (${totUpDown}/${totChips})`],
+        ['Avg Chip Proximity', `${avg(chipDists)}m`],
+        ['Sand Save %', `${totSand ? ((totSandSave/totSand)*100).toFixed(1) : 0}% (${totSandSave}/${totSand})`],
+        ['Avg Sand Proximity', `${avg(sandDists)}m`],
+        ['Scramble %', `${totScramAtt ? ((totScramMade/totScramAtt)*100).toFixed(1) : 0}% (${totScramMade}/${totScramAtt})`],
+        ['Tee Miss L / R / S', `L:${totL} • R:${totR} • S:${totS}`]
+      ];
+      document.getElementById('careerShortGame').innerHTML = sgCards.map(([k,v]) =>
+        `<div class="bg-slate-700/60 p-2.5 rounded-lg flex flex-col"><span class="text-slate-400 text-[11px]">${k}</span><b class="text-emerald-300 text-sm mt-0.5">${v}</b></div>`
+      ).join('');
+
+      // Approach Matrix
+      document.getElementById('careerApproach').innerHTML = APP_LABELS.map((label, i) => {
+        const att = rounds.reduce((a,r)=>a+(r.appAtt[i]||0), 0);
+        const gir = rounds.reduce((a,r)=>a+(r.appGir[i]||0), 0);
+        const pct = att ? Math.round((gir/att)*100) : 0;
+        const validProx = rounds.filter(r => r.appDis && r.appDis[i] > 0).map(r => r.appDis[i]);
+        const prox = validProx.length ? avg(validProx) + 'm' : '-';
+        return `<div class="grid grid-cols-5 py-1.5 border-b border-slate-700/70 items-center">
+          <span class="font-semibold">${label}</span>
+          <span class="text-center text-slate-300">${gir}/${att}</span>
+          <span class="text-center font-bold text-emerald-300">${pct}%</span>
+          <span class="text-center">${prox}</span>
+          <span class="text-right text-slate-400 text-[11px]">${SCRATCH_GIR[i]}% / ${SCRATCH_PROX[i]}m</span>
+        </div>`;
+      }).join('');
+    }
+
+    function renderHistoryTab() {
+      const list = document.getElementById('historyList');
+      list.innerHTML = [...roundHistory].reverse().map((r, revIdx) => {
+        const realIdx = roundHistory.length - 1 - revIdx;
+        return `<div class="bg-slate-700/60 p-3 rounded-lg flex justify-between items-center">
+          <div>
+            <div class="font-bold text-white">${r.course} <span class="text-slate-400 font-normal">(${r.date})</span></div>
+            <div class="text-slate-300 mt-0.5">Score: <b class="text-emerald-300">+${r.score}</b> • Putts: <b>${r.totalPutts}</b> • GIR: <b>${r.gir}</b> • FWY: <b>${r.fwyPct}%</b></div>
+          </div>
+          <button onclick="deleteRound(${realIdx})" class="text-rose-400 text-xs px-2 py-1 rounded border border-rose-500/40">Delete</button>
+        </div>`;
+      }).join('');
+    }
+
+    function deleteRound(idx) {
+      if (confirm(`Delete round at ${roundHistory[idx].course} (${roundHistory[idx].date})?`)) {
+        roundHistory.splice(idx, 1);
+        localStorage.setItem('golfApp_history_v1', JSON.stringify(roundHistory));
+        populateCourseFilter();
+        renderHistoryTab();
+      }
+    }
+
+    function exportBackupJSON() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(roundHistory, null, 2));
+      const a = document.createElement('a');
+      a.setAttribute("href", dataStr);
+      a.setAttribute("download", `golf_stats_backup_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    function importBackupJSON(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const imported = JSON.parse(evt.target.result);
+          if (Array.isArray(imported)) {
+            roundHistory = imported;
+            localStorage.setItem('golfApp_history_v1', JSON.stringify(roundHistory));
+            populateCourseFilter();
+            renderHistoryTab();
+            alert(`Restored ${roundHistory.length} rounds!`);
+          }
+        } catch (err) { alert("Invalid backup file."); }
+      };
+      reader.readAsText(file);
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
