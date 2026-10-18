@@ -192,8 +192,8 @@
 
       <div class="grid grid-cols-2 gap-1.5 text-xs pt-1" id="clockGroupButtons">
         <button onclick="setClockHour('6:00')" data-mult="0" class="btn-toggle py-2 px-2 rounded-lg border border-slate-600 bg-slate-700">12 / 6 (&times;0.00)</button>
-        <button onclick="setClockHour('1:00')" data-mult="0.4" class="btn-toggle py-2 px-2 rounded-lg border border-slate-600 bg-slate-700">1/5/7/11 (&times;0.40)</button>
-        <button onclick="setClockHour('2:00')" data-mult="0.7" class="btn-toggle py-2 px-2 rounded-lg border border-slate-600 bg-slate-700">2/4/8/10 (&times;0.70)</button>
+        <button onclick="setClockHour('1:00')" data-mult="0.5" class="btn-toggle py-2 px-2 rounded-lg border border-slate-600 bg-slate-700">1/5/7/11 (&times;0.50)</button>
+        <button onclick="setClockHour('2:00')" data-mult="0.85" class="btn-toggle py-2 px-2 rounded-lg border border-slate-600 bg-slate-700">2/4/8/10 (&times;0.85)</button>
         <button onclick="setClockHour('3:00')" data-mult="1" class="btn-toggle active py-2 px-2 rounded-lg border border-slate-600 bg-slate-700">3 / 9 (&times;1.00)</button>
       </div>
     </div>
@@ -244,7 +244,6 @@
       <div id="roundMetrics" class="grid grid-cols-2 gap-2 text-xs pt-2"></div>
     </div>
 
-    <!-- Putting Distance Breakdown for Current Round -->
     <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-2">
       <h3 class="font-bold text-slate-300 text-sm">Putting Make % by Distance (Current Round)</h3>
       <div id="roundPuttingBreakdown" class="space-y-2 text-xs"></div>
@@ -342,37 +341,7 @@
   </section>
 
   <script>
-    const PRELOADED_ROUNDS = [
-      {"date":"27/06/2026","course":"GGC","score":14,"totalPutts":39,"puttAtt":[16,4,3,1,1,7],"puttMade":[15,2,0,0,0,0],"eagles":0,"birdies":0,"pars":7,"bogeys":9,"dblPlus":2,"fwyPct":40,"gir":9,"penalty":2,"chips":6,"upDown":1,"avgChipDist":7.33,"sandShots":2,"avgSandDist":4.05,"sandSave":1,"appAtt":[1,1,4,2,3,0,3,0,0,0,0,0,0],"appGir":[1,1,3,1,3,0,0,0,0,0,0,0,0],"appDis":[6,10,8.67,17,8.33,0,0,0,0,0,0,0,0],"scrambleAtt":6,"scrambleMade":2,"fwyRight":2,"fwyLeft":3,"fwyShort":1,"par3Avg":3.88,"par4Avg":4.5,"par5Avg":6.5},
-      {"date":"4/7/2026","course":"Curlewis","score":16,"totalPutts":35,"puttAtt":[16,3,2,2,0,4],"puttMade":[15,2,0,0,0,1],"eagles":0,"birdies":1,"pars":6,"bogeys":7,"dblPlus":4,"fwyPct":50,"gir":8,"penalty":3,"chips":5,"upDown":3,"avgChipDist":2.44,"sandShots":3,"avgSandDist":5,"sandSave":0,"appAtt":[0,3,1,2,2,3,0,0,4,0,0,1,0],"appGir":[0,3,0,1,1,2,0,0,1,0,0,0,0],"appDis":[0,14.67,0,25,13.1,8,0,0,25,0,0,0,0],"scrambleAtt":7,"scrambleMade":0,"fwyRight":2,"fwyLeft":3,"fwyShort":2,"par3Avg":4,"par4Avg":5,"par5Avg":5.33},
-      {"date":"8/7/2023","course":"Curlewis","score":17,"totalPutts":36,"puttAtt":[15,1,1,2,0,12],"puttMade":[14,1,0,0,0,3],"eagles":0,"birdies":1,"pars":6,"bogeys":6,"dblPlus":5,"fwyPct":46,"gir":8,"penalty":1,"chips":4,"upDown":0,"avgChipDist":8,"sandShots":3,"avgSandDist":6.07,"sandSave":1,"appAtt":[2,1,2,2,2,2,0,1,0,1,1,0,0],"appGir":[1,1,1,0,2,0,0,0,0,1,1,0,0],"appDis":[7.1,13,3.5,0,13,0,0,0,0,6,6,0,0],"scrambleAtt":7,"scrambleMade":1,"fwyRight":2,"fwyLeft":4,"fwyShort":4,"par3Avg":3,"par4Avg":5.27,"par5Avg":0},
-      {"date":"11/7/2026","course":"Curlewis","score":10,"totalPutts":32,"puttAtt":[12,1,6,0,2,4],"puttMade":[12,1,3,0,1,2],"eagles":0,"birdies":3,"pars":5,"bogeys":8,"dblPlus":2,"fwyPct":57,"gir":6,"penalty":2,"chips":7,"upDown":1,"avgChipDist":6.59,"sandShots":3,"avgSandDist":7.55,"sandSave":1,"appAtt":[1,5,1,1,0,3,0,0,0,0,0,2,0],"appGir":[0,1,0,1,0,1,0,0,0,0,0,0,0],"appDis":[0,5.05,0,13,0,25,0,0,0,0,0,0,0],"scrambleAtt":6,"scrambleMade":1,"fwyRight":1,"fwyLeft":4,"fwyShort":1,"par3Avg":3.75,"par4Avg":4.64,"par5Avg":0},
-      {"date":"18/07/2026","course":"GGC","score":13,"totalPutts":36,"puttAtt":[17,4,2,0,1,4],"puttMade":[14,1,1,0,1,1],"eagles":0,"birdies":2,"pars":8,"bogeys":3,"dblPlus":5,"fwyPct":70,"gir":8,"penalty":1,"chips":8,"upDown":3,"avgChipDist":7.53,"sandShots":2,"avgSandDist":3.55,"sandSave":0,"appAtt":[3,4,2,0,2,0,1,2,0,0,1,0,0],"appGir":[3,1,0,0,2,0,0,1,0,0,0,0,0],"appDis":[2.87,6.05,0,0,15.5,0,0,11,0,0,0,0,0],"scrambleAtt":3,"scrambleMade":0,"fwyRight":1,"fwyLeft":2,"fwyShort":0,"par3Avg":4.12,"par4Avg":4,"par5Avg":7},
-      {"date":"21/7/2026","course":"Geelong","score":11,"totalPutts":36,"puttAtt":[18,1,2,5,3,2],"puttMade":[18,0,0,0,0,0],"eagles":0,"birdies":0,"pars":10,"bogeys":5,"dblPlus":3,"fwyPct":45,"gir":10,"penalty":0,"chips":6,"upDown":1,"avgChipDist":2.93,"sandShots":2,"avgSandDist":5,"sandSave":0,"appAtt":[3,2,5,0,2,2,2,0,0,0,0,0,0],"appGir":[3,2,2,0,1,1,1,0,0,0,0,0,0],"appDis":[3.67,5,3.5,0,18,18,3,0,0,0,0,0,0],"scrambleAtt":6,"scrambleMade":0,"fwyRight":4,"fwyLeft":1,"fwyShort":1,"par3Avg":3.62,"par4Avg":4.75,"par5Avg":5},
-      {"date":"25/07/2026","course":"Curlewis","score":17,"totalPutts":34,"puttAtt":[13,4,3,1,1,6],"puttMade":[13,2,1,0,0,2],"eagles":0,"birdies":1,"pars":5,"bogeys":6,"dblPlus":6,"fwyPct":36,"gir":5,"penalty":2,"chips":9,"upDown":2,"avgChipDist":5.8,"sandShots":2,"avgSandDist":2,"sandSave":1,"appAtt":[0,4,2,3,1,2,0,0,2,1,0,0,1],"appGir":[0,3,0,0,0,2,0,0,0,0,0,0,0],"appDis":[0,8.7,0,0,0,11.5,0,0,0,0,0,0,0],"scrambleAtt":9,"scrambleMade":1,"fwyRight":4,"fwyLeft":4,"fwyShort":1,"par3Avg":3.75,"par4Avg":4.91,"par5Avg":6.33},
-      {"date":"1/8/2026","course":"Murray Yarrawonga","score":15,"totalPutts":31,"puttAtt":[9,2,6,4,0,6],"puttMade":[9,2,3,2,0,2],"eagles":0,"birdies":2,"pars":6,"bogeys":4,"dblPlus":6,"fwyPct":46,"gir":6,"penalty":0,"chips":9,"upDown":4,"avgChipDist":5.87,"sandShots":1,"avgSandDist":3,"sandSave":0,"appAtt":[1,4,0,3,1,2,0,0,1,0,1,0,0],"appGir":[1,3,0,1,0,1,0,0,0,0,0,0,0],"appDis":[1.51,10.03,0,2,0,8,0,0,0,0,0,0,0],"scrambleAtt":7,"scrambleMade":0,"fwyRight":3,"fwyLeft":4,"fwyShort":0,"par3Avg":4.8,"par4Avg":4.44,"par5Avg":5.5},
-      {"date":"8/8/2026","course":"Curlewis","score":21,"totalPutts":39,"puttAtt":[19,1,1,2,2,8],"puttMade":[18,0,0,0,0,0],"eagles":0,"birdies":0,"pars":7,"bogeys":3,"dblPlus":8,"fwyPct":64,"gir":7,"penalty":0,"chips":5,"upDown":0,"avgChipDist":7.2,"sandShots":3,"avgSandDist":4.33,"sandSave":0,"appAtt":[0,3,1,4,3,1,1,1,0,0,1,1,0],"appGir":[0,2,0,2,1,1,0,0,0,0,1,0,0],"appDis":[0,6,0,7,10,7,0,0,0,0,9,0,0],"scrambleAtt":5,"scrambleMade":0,"fwyRight":2,"fwyLeft":3,"fwyShort":2,"par3Avg":4.25,"par4Avg":5.18,"par5Avg":6},
-      {"date":"15/08/2026","course":"Curlewis","score":16,"totalPutts":30,"puttAtt":[12,4,1,4,0,5],"puttMade":[11,2,1,2,0,2],"eagles":0,"birdies":1,"pars":6,"bogeys":5,"dblPlus":6,"fwyPct":36,"gir":3,"penalty":1,"chips":10,"upDown":5,"avgChipDist":4.59,"sandShots":4,"avgSandDist":4.53,"sandSave":0,"appAtt":[0,2,4,3,0,0,0,1,0,1,1,0,1],"appGir":[0,0,1,1,0,0,0,0,0,0,0,0,0],"appDis":[0,0,11,7.1,0,0,0,0,0,0,0,0,0],"scrambleAtt":9,"scrambleMade":0,"fwyRight":2,"fwyLeft":5,"fwyShort":2,"par3Avg":4.25,"par4Avg":4.64,"par5Avg":6.33},
-      {"date":"22/08/2026","course":"Curlewis","score":25,"totalPutts":41,"puttAtt":[18,1,5,1,0,5],"puttMade":[18,0,0,0,0,0],"eagles":0,"birdies":0,"pars":2,"bogeys":8,"dblPlus":8,"fwyPct":36,"gir":4,"penalty":3,"chips":8,"upDown":0,"avgChipDist":8,"sandShots":3,"avgSandDist":3.83,"sandSave":0,"appAtt":[0,2,0,1,0,2,0,1,1,1,3,0,1],"appGir":[0,0,0,0,0,0,0,0,0,0,2,0,0],"appDis":[0,0,0,0,0,0,0,0,0,0,22.5,0,0],"scrambleAtt":9,"scrambleMade":0,"fwyRight":5,"fwyLeft":1,"fwyShort":3,"par3Avg":4,"par4Avg":5.36,"par5Avg":7},
-      {"date":"29/08/2026","course":"Geelong","score":8,"totalPutts":30,"puttAtt":[12,3,2,1,0,5],"puttMade":[12,2,0,1,0,2],"eagles":0,"birdies":3,"pars":6,"bogeys":7,"dblPlus":2,"fwyPct":70,"gir":7,"penalty":0,"chips":10,"upDown":4,"avgChipDist":5.04,"sandShots":1,"avgSandDist":2,"sandSave":0,"appAtt":[1,6,2,3,0,0,1,2,0,0,0,0,0],"appGir":[1,3,2,0,0,0,0,1,0,0,0,0,0],"appDis":[1.51,4.37,9.05,0,0,0,0,18,0,0,0,0,0],"scrambleAtt":3,"scrambleMade":0,"fwyRight":2,"fwyLeft":1,"fwyShort":0,"par3Avg":3.62,"par4Avg":4.38,"par5Avg":5},
-      {"date":"30/08/2026","course":"Werribee","score":12,"totalPutts":29,"puttAtt":[8,3,4,2,4,5],"puttMade":[8,3,3,0,2,2],"eagles":0,"birdies":1,"pars":8,"bogeys":5,"dblPlus":4,"fwyPct":57,"gir":5,"penalty":1,"chips":7,"upDown":6,"avgChipDist":2.77,"sandShots":4,"avgSandDist":3.77,"sandSave":0,"appAtt":[0,2,1,3,1,0,1,1,2,1,0,0,0],"appGir":[0,0,0,1,1,0,0,0,2,1,0,0,0],"appDis":[0,0,0,5,9,0,0,0,9.55,15,0,0,0],"scrambleAtt":6,"scrambleMade":0,"fwyRight":3,"fwyLeft":3,"fwyShort":0,"par3Avg":3.5,"par4Avg":4.7,"par5Avg":5.75},
-      {"date":"5/9/2026","course":"GGC - Stroke","score":20,"totalPutts":38,"puttAtt":[16,2,2,5,0,4],"puttMade":[15,2,0,1,0,0],"eagles":0,"birdies":1,"pars":4,"bogeys":9,"dblPlus":4,"fwyPct":30,"gir":5,"penalty":0,"chips":10,"upDown":0,"avgChipDist":6.3,"sandShots":1,"avgSandDist":3,"sandSave":0,"appAtt":[1,6,3,0,0,0,1,2,0,0,0,0,0],"appGir":[0,2,0,0,0,0,1,1,0,0,0,0,0],"appDis":[0,7.55,0,0,0,0,5,13,0,0,0,0,0],"scrambleAtt":7,"scrambleMade":0,"fwyRight":4,"fwyLeft":3,"fwyShort":0,"par3Avg":4.38,"par4Avg":4.88,"par5Avg":11},
-      {"date":"12/9/2026","course":"GGC","score":14,"totalPutts":35,"puttAtt":[13,2,3,3,0,7],"puttMade":[12,1,3,1,0,1],"eagles":0,"birdies":0,"pars":8,"bogeys":7,"dblPlus":3,"fwyPct":50,"gir":7,"penalty":0,"chips":8,"upDown":3,"avgChipDist":6.54,"sandShots":2,"avgSandDist":6.5,"sandSave":0,"appAtt":[2,3,2,1,2,1,1,0,0,0,0,0,0],"appGir":[2,2,1,1,1,0,0,0,0,0,0,0,0],"appDis":[5,13,8,7,15,0,0,0,0,0,0,0,0],"scrambleAtt":5,"scrambleMade":0,"fwyRight":4,"fwyLeft":0,"fwyShort":1,"par3Avg":3.88,"par4Avg":4.5,"par5Avg":6.5},
-      {"date":"19/09/2026","course":"GGC","score":11,"totalPutts":29,"puttAtt":[11,4,5,2,0,6],"puttMade":[10,2,4,0,0,1],"eagles":1,"birdies":2,"pars":5,"bogeys":5,"dblPlus":5,"fwyPct":60,"gir":6,"penalty":2,"chips":9,"upDown":3,"avgChipDist":3.98,"sandShots":4,"avgSandDist":6.4,"sandSave":1,"appAtt":[1,5,2,2,1,0,3,1,0,0,0,1,0],"appGir":[1,2,1,0,0,0,0,0,0,0,0,0,0],"appDis":[1.51,4.75,9,0,0,0,3,0,0,0,0,0,0],"scrambleAtt":4,"scrambleMade":1,"fwyRight":1,"fwyLeft":1,"fwyShort":2,"par3Avg":3.75,"par4Avg":4.5,"par5Avg":5.5},
-      {"date":"6/10/2026","course":"Creek","score":19,"totalPutts":34,"puttAtt":[17,1,1,1,2,7],"puttMade":[16,0,0,1,1,0],"eagles":0,"birdies":0,"pars":7,"bogeys":4,"dblPlus":7,"fwyPct":50,"gir":5,"penalty":2,"chips":10,"upDown":3,"avgChipDist":4.28,"sandShots":3,"avgSandDist":6.33,"sandSave":0,"appAtt":[2,1,1,1,3,0,1,1,1,0,0,1,1],"appGir":[2,0,2,0,0,0,0,0,0,0,0,1,0],"appDis":[8.5,0,13,0,0,0,0,0,0,0,0,30,0],"scrambleAtt":7,"scrambleMade":0,"fwyRight":3,"fwyLeft":2,"fwyShort":2,"par3Avg":3.75,"par4Avg":5.2,"par5Avg":6},
-      {"date":"9/10/2026","course":"Beach","score":22,"totalPutts":38,"puttAtt":[14,2,3,5,1,7],"puttMade":[14,1,2,1,0,0],"eagles":0,"birdies":0,"pars":5,"bogeys":6,"dblPlus":7,"fwyPct":57,"gir":4,"penalty":6,"chips":7,"upDown":3,"avgChipDist":4.74,"sandShots":1,"avgSandDist":3,"sandSave":0,"appAtt":[0,5,2,0,1,2,0,3,0,1,0,0,0],"appGir":[0,1,1,0,0,0,0,2,0,0,0,0,0],"appDis":[0,15,12,0,0,0,0,11.5,0,0,0,0,0],"scrambleAtt":6,"scrambleMade":0,"fwyRight":5,"fwyLeft":1,"fwyShort":0,"par3Avg":4,"par4Avg":5.18,"par5Avg":6.5},
-      {"date":"10/10/2026","course":"Geelong","score":16,"totalPutts":30,"puttAtt":[11,4,1,2,2,7],"puttMade":[11,3,1,2,1,0],"eagles":0,"birdies":2,"pars":2,"bogeys":11,"dblPlus":3,"fwyPct":30,"gir":4,"penalty":1,"chips":8,"upDown":2,"avgChipDist":6.2,"sandShots":5,"avgSandDist":7.32,"sandSave":1,"appAtt":[2,3,3,1,0,0,1,3,0,0,0,0,0],"appGir":[1,2,1,0,0,0,0,0,0,0,0,0,0],"appDis":[3.1,5.55,10,0,0,0,0,0,0,0,0,0,0],"scrambleAtt":7,"scrambleMade":1,"fwyRight":5,"fwyLeft":1,"fwyShort":1,"par3Avg":4,"par4Avg":4.75,"par5Avg":6},
-      {"date":"26/05/2026","course":"Curlewis","score":10,"totalPutts":34,"puttAtt":[12,2,3,3,2,4],"puttMade":[12,2,2,1,1,0],"eagles":0,"birdies":0,"pars":9,"bogeys":8,"dblPlus":1,"fwyPct":36,"gir":7,"penalty":0,"chips":6,"upDown":3,"avgChipDist":5.79,"sandShots":3,"avgSandDist":8.03,"sandSave":0,"appAtt":[0,3,2,2,2,2,3,0,0,1,0,0,0],"appGir":[0,3,0,1,2,0,0,0,0,0,0,0,0],"appDis":[0,8.33,0,6,9,0,0,0,0,0,0,0,0],"scrambleAtt":9,"scrambleMade":0,"fwyRight":5,"fwyLeft":3,"fwyShort":1,"par3Avg":3.75,"par4Avg":4.55,"par5Avg":5.33},
-      {"date":"30/05/2026","course":"GGC champs 2","score":7,"totalPutts":32,"puttAtt":[13,1,3,1,2,8],"puttMade":[13,1,2,1,0,1],"eagles":0,"birdies":2,"pars":8,"bogeys":7,"dblPlus":1,"fwyPct":70,"gir":9,"penalty":0,"chips":6,"upDown":1,"avgChipDist":6.35,"sandShots":2,"avgSandDist":6.75,"sandSave":0,"appAtt":[1,3,1,4,0,0,1,2,0,0,0,0,0],"appGir":[1,2,1,2,0,0,0,1,0,0,0,0,0],"appDis":[5.5,5.55,3.1,12,0,0,0,6,0,0,0,0,0],"scrambleAtt":3,"scrambleMade":0,"fwyRight":3,"fwyLeft":0,"fwyShort":0,"par3Avg":3.62,"par4Avg":4.12,"par5Avg":5.5},
-      {"date":"1/6/2026","course":"13th Beach","score":13,"totalPutts":34,"puttAtt":[14,3,2,1,2,7],"puttMade":[13,2,1,0,1,1],"eagles":0,"birdies":1,"pars":7,"bogeys":7,"dblPlus":3,"fwyPct":57,"gir":8,"penalty":1,"chips":6,"upDown":1,"avgChipDist":5.2,"sandShots":3,"avgSandDist":7.7,"sandSave":1,"appAtt":[0,3,2,2,2,0,2,1,2,0,0,0,0],"appGir":[0,3,1,2,0,0,1,0,1,0,0,0,0],"appDis":[0,8,8,17,0,0,8,0,1.1,0,0,0,0],"scrambleAtt":6,"scrambleMade":1,"fwyRight":4,"fwyLeft":2,"fwyShort":0,"par3Avg":3.75,"par4Avg":4.7,"par5Avg":11},
-      {"date":"10/6/2026","course":"Curlewis","score":14,"totalPutts":32,"puttAtt":[15,0,3,2,0,5],"puttMade":[15,0,1,1,0,1],"eagles":0,"birdies":2,"pars":6,"bogeys":5,"dblPlus":5,"fwyPct":29,"gir":7,"penalty":1,"chips":9,"upDown":2,"avgChipDist":7.47,"sandShots":0,"avgSandDist":0,"sandSave":0,"appAtt":[1,2,3,2,2,0,1,1,0,3,0,0,0],"appGir":[1,1,2,1,1,0,0,0,0,1,0,0,0],"appDis":[1.1,12,7,0,5.51,0,0,0,0,14,0,0,0],"scrambleAtt":10,"scrambleMade":0,"fwyRight":4,"fwyLeft":6,"fwyShort":0,"par3Avg":3.25,"par4Avg":5,"par5Avg":5.67},
-      {"date":"13/06/2026","course":"Curlewis","score":18,"totalPutts":39,"puttAtt":[17,2,3,2,2,8],"puttMade":[16,2,0,0,0,0],"eagles":0,"birdies":0,"pars":5,"bogeys":8,"dblPlus":5,"fwyPct":57,"gir":8,"penalty":2,"chips":5,"upDown":0,"avgChipDist":4.6,"sandShots":4,"avgSandDist":7.5,"sandSave":0,"appAtt":[1,2,2,2,2,4,0,0,0,1,0,1,1],"appGir":[1,2,0,2,1,1,0,0,0,0,0,1,0],"appDis":[5,25,0,16,10,2,0,0,0,0,0,7,0],"scrambleAtt":6,"scrambleMade":0,"fwyRight":1,"fwyLeft":5,"fwyShort":0,"par3Avg":4.33,"par4Avg":4.82,"par5Avg":6.67},
-      {"date":"17/06/2026","course":"Curlewis","score":10,"totalPutts":35,"puttAtt":[14,6,0,3,2,6],"puttMade":[14,2,0,1,1,0],"eagles":0,"birdies":1,"pars":9,"bogeys":5,"dblPlus":3,"fwyPct":79,"gir":9,"penalty":0,"chips":8,"upDown":2,"avgChipDist":6.39,"sandShots":3,"avgSandDist":7.17,"sandSave":0,"appAtt":[5,5,3,1,1,0,0,1,0,0,0,0,0],"appGir":[3,2,1,0,0,0,0,1,0,0,0,0,0],"appDis":[2.83,11.5,11,0,0,0,0,3.1,0,0,0,0,0],"scrambleAtt":3,"scrambleMade":0,"fwyRight":1,"fwyLeft":2,"fwyShort":0,"par3Avg":4,"par4Avg":4.64,"par5Avg":0},
-      {"date":"21/06/2026","course":"13th Beach","score":11,"totalPutts":34,"puttAtt":[14,1,3,1,3,6],"puttMade":[14,1,1,0,0,1],"eagles":0,"birdies":2,"pars":7,"bogeys":5,"dblPlus":4,"fwyPct":86,"gir":8,"penalty":2,"chips":8,"upDown":3,"avgChipDist":5.16,"sandShots":0,"avgSandDist":0,"sandSave":0,"appAtt":[2,4,0,0,2,2,2,3,0,0,0,0,0],"appGir":[1,3,0,0,1,0,1,2,0,0,0,0,0],"appDis":[15,6,0,0,12,0,20,6.05,0,0,0,0,0],"scrambleAtt":2,"scrambleMade":0,"fwyRight":0,"fwyLeft":1,"fwyShort":1,"par3Avg":3.75,"par4Avg":4.5,"par5Avg":11},
-      {"date":"24/06/2026","course":"Curlewis","score":11,"totalPutts":34,"puttAtt":[12,3,1,1,2,5],"puttMade":[12,3,0,1,0,1],"eagles":0,"birdies":1,"pars":8,"bogeys":6,"dblPlus":3,"fwyPct":71,"gir":8,"penalty":1,"chips":8,"upDown":3,"avgChipDist":6.16,"sandShots":1,"avgSandDist":5,"sandSave":0,"appAtt":[1,4,3,0,3,0,1,1,0,1,0,0,0],"appGir":[1,2,3,0,1,0,0,0,0,1,0,0,0],"appDis":[1.51,8,12.67,0,28,0,0,0,0,20,0,0,0],"scrambleAtt":4,"scrambleMade":0,"fwyRight":3,"fwyLeft":1,"fwyShort":0,"par3Avg":3.5,"par4Avg":4.73,"par5Avg":5.33},
-      {"date":"1/7/2026","course":"Victoria","score":14,"totalPutts":37,"puttAtt":[13,1,2,0,1,6],"puttMade":[13,0,2,0,0,0],"eagles":0,"birdies":0,"pars":7,"bogeys":8,"dblPlus":3,"fwyPct":21,"gir":9,"penalty":0,"chips":4,"upDown":0,"avgChipDist":7,"sandShots":3,"avgSandDist":8.33,"sandSave":0,"appAtt":[0,3,2,0,4,1,2,1,0,0,0,0,0],"appGir":[0,3,2,0,2,0,0,0,0,0,0,0,0],"appDis":[0,18.33,11.5,0,6.5,0,0,0,0,0,0,0,0],"scrambleAtt":11,"scrambleMade":3,"fwyRight":6,"fwyLeft":4,"fwyShort":1,"par3Avg":3.5,"par4Avg":5.2,"par5Avg":5.25}
-    ];
-
+    const PRELOADED_ROUNDS = [];
     const APP_LABELS = ['<50','50-104','105-119','120-129','130-139','140-149','150-159','160-169','170-179','180-189','190-199','200-219','220+'];
     const SCRATCH_GIR = [75, 69, 63, 57, 51, 46, 40, 34, 28, 22, 16, 10, 13];
     const SCRATCH_PROX = [5.0, 5.9, 6.8, 7.7, 8.6, 9.5, 10.4, 11.3, 12.2, 13.1, 14.0, 14.9, 15.8];
@@ -384,50 +353,48 @@
     let holes = [];
     let roundHistory = [];
 
-    // Exact Putting Matrix Lookup from your Image (1m to 10m across 1%-4% slopes and 4 multipliers)
+    // Exact Putting Matrix Lookup from your Image and Excel Sheet
     const PUTT_MATRIX = {
-      "1_0": [0,0,0,0], "1_0.4": [1,2,3,4], "1_0.7": [2,3,5,6], "1_1": [2,4,6,8],
-      "2_0": [0,0,0,0], "2_0.4": [4,9,14,18], "2_0.7": [6,14,22,30], "2_1": [8,20,30,40],
-      "3_0": [0,0,0,0], "3_0.4": [6,14,22,30], "3_0.7": [10,22,35,47], "3_1": [14,30,48,64],
-      "4_0": [0,0,0,0], "4_0.4": [8,20,30,40], "4_0.7": [14,30,48,64], "4_1": [20,40,60,80],
-      "5_0": [0,0,0,0], "5_0.4": [11,25,39,52], "5_0.7": [18,36,55,75], "5_1": [25,48,75,97],
-      "6_0": [0,0,0,0], "6_0.4": [14,30,48,64], "6_0.7": [22,48,75,97], "6_1": [30,64,97,130],
-      "7_0": [0,0,0,0], "7_0.4": [17,36,55,75], "7_0.7": [28,55,86,115], "7_1": [36,75,120,150],
-      "8_0": [0,0,0,0], "8_0.4": [20,42,65,86], "8_0.7": [32,65,102,138], "8_1": [42,86,138,185],
-      "9_0": [0,0,0,0], "9_0.4": [22,47,72,97], "9_0.7": [36,72,113,153], "9_1": [47,97,153,205],
-      "10_0": [0,0,0,0], "10_0.4": [25,52,80,104], "10_0.7": [40,80,128,174], "10_1": [52,104,174,232]
+      "1_0": [0,0,0,0], "1_0.5": [1,2,3,4], "1_0.85": [2,3,5,7], "1_1": [2,4,7,10],
+      "2_0": [0,0,0,0], "2_0.5": [3,6,10,14], "2_0.85": [5,10,17,24], "2_1": [6,12,20,28],
+      "3_0": [0,0,0,0], "3_0.5": [6,12,19,26], "3_0.85": [10,20,32,44], "3_1": [12,24,38,52],
+      "4_0": [0,0,0,0], "4_0.5": [10,20,30,40], "4_0.85": [17,34,51,68], "4_1": [20,40,60,80],
+      "5_0": [0,0,0,0], "5_0.5": [15,30,45,60], "5_0.85": [26,51,77,102], "5_1": [30,60,90,120],
+      "6_0": [0,0,0,0], "6_0.5": [21,42,63,84], "6_0.85": [36,71,107,143], "6_1": [42,84,126,168],
+      "7_0": [0,0,0,0], "7_0.5": [28,56,84,112], "7_0.85": [48,95,143,190], "7_1": [56,112,168,224],
+      "8_0": [0,0,0,0], "8_0.5": [36,72,108,144], "8_0.85": [61,122,184,245], "8_1": [72,144,216,288],
+      "9_0": [0,0,0,0], "9_0.5": [45,90,135,180], "9_0.85": [77,153,230,306], "9_1": [90,180,270,360],
+      "10_0": [0,0,0,0], "10_0.5": [55,110,165,220], "10_0.85": [94,187,281,374], "10_1": [110,220,330,440]
     };
 
     let puttState = { dist: 2, hour: '3:00', mult: 1.0, slope: 2 };
     const clockConfig = {
       '12:00': { mult: 0.00, desc: 'Straight Downhill (No Break)' },
-      '1:00':  { mult: 0.40, desc: 'Downhill • Breaks Left-to-Right (×0.40)' },
-      '2:00':  { mult: 0.70, desc: 'Downhill • Breaks Left-to-Right (×0.70)' },
-      '3:00':  { mult: 1.00, desc: 'Sidehill • Breaks Left-to-Right (×1.00)' },
-      '4:00':  { mult: 0.70, desc: 'Uphill • Breaks Left-to-Right (×0.70)' },
-      '5:00':  { mult: 0.40, desc: 'Uphill • Breaks Left-to-Right (×0.40)' },
+      '1:00':  { mult: 0.50, desc: 'Downhill • Breaks Left-to-Right (0.50x)' },
+      '2:00':  { mult: 0.85, desc: 'Downhill • Breaks Left-to-Right (0.85x)' },
+      '3:00':  { mult: 1.00, desc: 'Sidehill • Breaks Left-to-Right (1.00x)' },
+      '4:00':  { mult: 0.85, desc: 'Uphill • Breaks Left-to-Right (0.85x)' },
+      '5:00':  { mult: 0.50, desc: 'Uphill • Breaks Left-to-Right (0.50x)' },
       '6:00':  { mult: 0.00, desc: 'Straight Uphill (No Break)' },
-      '7:00':  { mult: 0.40, desc: 'Uphill • Breaks Right-to-Left (×0.40)' },
-      '8:00':  { mult: 0.70, desc: 'Uphill • Breaks Right-to-Left (×0.70)' },
-      '9:00':  { mult: 1.00, desc: 'Sidehill • Breaks Right-to-Left (×1.00)' },
-      '10:00': { mult: 0.70, desc: 'Downhill • Breaks Right-to-Left (×0.70)' },
-      '11:00': { mult: 0.40, desc: 'Downhill • Breaks Right-to-Left (×0.40)' }
+      '7:00':  { mult: 0.50, desc: 'Uphill • Breaks Right-to-Left (0.50x)' },
+      '8:00':  { mult: 0.85, desc: 'Uphill • Breaks Right-to-Left (0.85x)' },
+      '9:00':  { mult: 1.00, desc: 'Sidehill • Breaks Right-to-Left (1.00x)' },
+      '10:00': { mult: 0.85, desc: 'Downhill • Breaks Right-to-Left (0.85x)' },
+      '11:00': { mult: 0.50, desc: 'Downhill • Breaks Right-to-Left (0.50x)' }
     };
 
     function calcBreakCm(dist, slope, mult) {
-      const roundedDist = Math.round(dist);
-      const clampedDist = Math.max(1, Math.min(10, roundedDist));
-      // Map mult to closest available key in matrix
+      const clampedDist = Math.max(1, Math.min(10, Math.round(dist)));
+      const clampedSlope = Math.max(1, Math.min(4, Math.round(slope)));
       let mKey = "1";
       if (mult === 0) mKey = "0";
-      else if (mult === 0.4 || mult === 0.5) mKey = "0.4";
-      else if (mult === 0.7 || mult === 0.85) mKey = "0.7";
+      else if (mult === 0.5) mKey = "0.5";
+      else if (mult === 0.85) mKey = "0.85";
       
       const key = `${clampedDist}_${mKey}`;
       const row = PUTT_MATRIX[key] || [0,0,0,0];
-      const slopeIdx = Math.max(1, Math.min(4, Math.round(slope))) - 1;
-      const baseBreak = row[slopeIdx];
-      if (roundedDist !== dist) {
+      const baseBreak = row[clampedSlope - 1] || 0;
+      if (clampedDist !== dist) {
         return Math.round(baseBreak * (dist / clampedDist));
       }
       return baseBreak;
@@ -481,10 +448,10 @@
 
       document.getElementById('matrixSliceTitle').innerText = `Putting Matrix @ ${dist}m (Break in cm)`;
       const groups = [
-        { label: '12 / 6 (×0.00)', m: 0.00 },
-        { label: '1/5/7/11 (×0.40)', m: 0.40 },
-        { label: '2/4/8/10 (×0.70)', m: 0.70 },
-        { label: '3 / 9 (×1.00)', m: 1.00 }
+        { label: '12 / 6 (&times;0.00)', m: 0.00 },
+        { label: '1/5/7/11 (&times;0.50)', m: 0.50 },
+        { label: '2/4/8/10 (&times;0.85)', m: 0.85 },
+        { label: '3 / 9 (&times;1.00)', m: 1.00 }
       ];
 
       document.getElementById('matrixSliceBody').innerHTML = groups.map(g => {
@@ -738,7 +705,6 @@
         `<div class="bg-slate-700/60 p-2.5 rounded-lg flex justify-between"><span>${k}</span><b class="text-emerald-300">${v}</b></div>`
       ).join('');
 
-      // Round Putting Breakdown
       document.getElementById('roundPuttingBreakdown').innerHTML = PUTT_LABELS.map((label, i) => {
         const att = r.puttAtt[i];
         const made = r.puttMade[i];
